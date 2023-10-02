@@ -1,5 +1,6 @@
 package com.ezreal.rpc.core.server;
 
+import com.ezreal.rpc.core.common.RpcDecoder;
 import com.ezreal.rpc.core.common.RpcEncoder;
 import com.ezreal.rpc.core.common.config.ServerConfig;
 import io.netty.bootstrap.ServerBootstrap;
@@ -49,6 +50,8 @@ public class Server {
                     @Override
                     protected void initChannel(SocketChannel channel) throws Exception {
                         channel.pipeline().addLast(new RpcEncoder());
+                        channel.pipeline().addLast(new RpcDecoder());
+                        channel.pipeline().addLast(new ServerHandler());
                     }
                 });
 
