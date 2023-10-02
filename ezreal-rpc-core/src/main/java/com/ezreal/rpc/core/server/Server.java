@@ -11,6 +11,10 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 
 import static com.ezreal.rpc.core.common.cache.ServerServiceCache.PROVIDER_CLASS_MAP;
 
@@ -19,6 +23,8 @@ import static com.ezreal.rpc.core.common.cache.ServerServiceCache.PROVIDER_CLASS
  * @Date 2023/10/2
  */
 public class Server {
+
+    private final Logger logger = LoggerFactory.getLogger(Server.class);
 
     private ServerConfig serverConfig;
 
@@ -55,6 +61,7 @@ public class Server {
                     }
                 });
 
+        logger.info("服务端启动,监听端口{}", serverConfig.getPort());
         ChannelFuture channelFuture = serverBootstrap.bind(serverConfig.getPort()).sync();
         channelFuture.channel().close().sync();
     }
