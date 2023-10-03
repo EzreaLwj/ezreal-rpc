@@ -3,6 +3,7 @@ package com.ezreal.rpc.core.server;
 import com.ezreal.rpc.core.common.RpcDecoder;
 import com.ezreal.rpc.core.common.RpcEncoder;
 import com.ezreal.rpc.core.common.config.ServerConfig;
+import com.ezreal.rpc.core.common.test.TestServiceImpl;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -80,6 +81,7 @@ public class Server {
         ServerConfig serverConfig = new ServerConfig(9999);
         Server server = new Server();
         server.setServerConfig(serverConfig);
+        server.registerService(new TestServiceImpl());
         server.setOnApplication();
     }
 }
