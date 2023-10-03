@@ -6,4 +6,6 @@ package com.ezreal.rpc.core.common.test;
  */
 public interface TestService {
     public String hello();
+
+    String sayName(String name, Integer count);
 }

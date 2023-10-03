@@ -10,4 +10,9 @@ public class TestServiceImpl implements TestService {
     public String hello() {
         return "Hello world";
     }
+
+    @Override
+    public String sayName(String name, Integer count) {
+        return "my name is " + name + " count is " + count;
+    }
 }
