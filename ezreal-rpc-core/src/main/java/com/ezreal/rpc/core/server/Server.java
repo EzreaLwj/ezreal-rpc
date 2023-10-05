@@ -2,19 +2,28 @@ package com.ezreal.rpc.core.server;
 
 import com.ezreal.rpc.core.common.RpcDecoder;
 import com.ezreal.rpc.core.common.RpcEncoder;
+import com.ezreal.rpc.core.common.config.PropertiesBootStrap;
 import com.ezreal.rpc.core.common.config.ServerConfig;
-import com.ezreal.rpc.core.common.test.TestServiceImpl;
+import com.ezreal.rpc.core.common.utils.CommonUtil;
+import com.ezreal.rpc.core.register.URL;
+import com.ezreal.rpc.core.register.zookeeper.AbstractRegister;
+import com.ezreal.rpc.core.register.zookeeper.ZookeeperRegister;
+import com.ezreal.rpc.test.UserServiceImpl;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+import java.util.HashMap;
 
 import static com.ezreal.rpc.core.common.cache.ServerServiceCache.PROVIDER_CLASS_MAP;
+import static com.ezreal.rpc.core.common.cache.ServerServiceCache.PROVIDER_URL_SET;
 
 /**
  * @author Ezreal
@@ -30,12 +39,10 @@ public class Server {
 
     private EventLoopGroup workerEventLoopGroup;
 
-    public ServerConfig getServerConfig() {
-        return serverConfig;
-    }
+    private AbstractRegister register;
 
-    public void setServerConfig(ServerConfig serverConfig) {
-        this.serverConfig = serverConfig;
+    private void initServerConfig() {
+        this.serverConfig = PropertiesBootStrap.loadServerConfig();
     }
 
     public void setOnApplication() throws InterruptedException {
@@ -60,28 +67,69 @@ public class Server {
                 });
 
         logger.info("服务端启动,监听端口{}", serverConfig.getPort());
+        this.batchExport();
         ChannelFuture channelFuture = serverBootstrap.bind(serverConfig.getPort()).sync();
         channelFuture.channel().closeFuture().sync();
     }
 
-    public void registerService(Object beanService) {
+    public void exportService(Object beanService) {
         Class<?>[] interfaces = beanService.getClass().getInterfaces();
         if (interfaces.length == 0) {
             throw new RuntimeException("the object must have one interface");
         }
-        if (interfaces.length >1) {
+        if (interfaces.length > 1) {
             throw new RuntimeException("the object only has one interface");
         }
+
+        if (register == null) {
+            register = new ZookeeperRegister(serverConfig.getAddress());
+        }
+
+        // 默认实现第一个接口
         Class<?> anInterface = interfaces[0];
-        PROVIDER_CLASS_MAP.put(anInterface.getName(), beanService);
+        String serviceName = anInterface.getName();
+        PROVIDER_CLASS_MAP.put(serviceName, beanService);
+
+        URL url = new URL();
+        url.setServiceName(serviceName);
+        url.setApplicationName(serverConfig.getApplicationName());
+        HashMap<String, String> params = new HashMap<>();
+        params.put("host", CommonUtil.getIpAddress());
+        params.put("port", String.valueOf(serverConfig.getPort()));
+        url.setParams(params);
+        PROVIDER_URL_SET.add(url);
     }
 
+    public void batchExport() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(2500);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                for (URL url : PROVIDER_URL_SET) {
+                    register.register(url);
+                }
+            }
+        }).start();
+    }
 
     public static void main(String[] args) throws InterruptedException {
-        ServerConfig serverConfig = new ServerConfig(9999);
+
         Server server = new Server();
-        server.setServerConfig(serverConfig);
-        server.registerService(new TestServiceImpl());
+        server.initServerConfig();
+        server.exportService(new UserServiceImpl());
         server.setOnApplication();
     }
+
+    public ServerConfig getServerConfig() {
+        return serverConfig;
+    }
+
+    public void setServerConfig(ServerConfig serverConfig) {
+        this.serverConfig = serverConfig;
+    }
+
 }

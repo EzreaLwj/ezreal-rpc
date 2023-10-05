@@ -35,11 +35,8 @@ public class JDKInvocationHandler implements InvocationHandler {
         rpcInvocation.setArgs(args);
         rpcInvocation.setUuid(UUID.randomUUID().toString());
 
-        String json = JSON.toJSONString(rpcInvocation);
-        RpcProtocol rpcProtocol = new RpcProtocol(json.getBytes());
-
         // 放入请求体
-        REQUEST_QUEUE.put(rpcProtocol);
+        REQUEST_QUEUE.put(rpcInvocation);
         RESP_MESSAGE.put(rpcInvocation.getUuid(), object);
 
         // 接收返回信息

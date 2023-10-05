@@ -6,32 +6,31 @@ package com.ezreal.rpc.core.common.config;
  */
 public class ClientConfig {
 
-    private int port;
+    private String applicationName;
 
-    private String host;
+    private String address;
 
     public ClientConfig() {
     }
 
-    public ClientConfig(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public ClientConfig(String applicationName, String address) {
+        this.applicationName = applicationName;
+        this.address = address;
     }
 
-    public int getPort() {
-        return port;
+    public String getApplicationName() {
+        return applicationName;
     }
 
-    public void setPort(int port) {
-        this.port = port;
+    public void setApplicationName(String applicationName) {
+        this.applicationName = applicationName;
     }
 
-
-    public String getHost() {
-        return host;
+    public String getAddress() {
+        return address;
     }
 
-    public void setHost(String host) {
-        this.host = host;
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

@@ -6,20 +6,36 @@ package com.ezreal.rpc.core.common.config;
  */
 public class ServerConfig {
 
-    private int port;
+    private String applicationName;
+
+    private String address;
+
+    private Integer port;
 
     public ServerConfig() {
     }
 
-    public ServerConfig(int port) {
-        this.port = port;
+    public String getApplicationName() {
+        return applicationName;
     }
 
-    public int getPort() {
+    public void setApplicationName(String applicationName) {
+        this.applicationName = applicationName;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public Integer getPort() {
         return port;
     }
 
-    public void setPort(int port) {
+    public void setPort(Integer port) {
         this.port = port;
     }
 }
