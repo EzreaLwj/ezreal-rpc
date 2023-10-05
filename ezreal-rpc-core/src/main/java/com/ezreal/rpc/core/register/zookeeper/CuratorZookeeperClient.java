@@ -100,26 +100,24 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient {
     @Override
     public void createTemporaryData(String address, String data) {
         try {
-            client.create().creatingParentContainersIfNeeded().withMode(CreateMode.EPHEMERAL_SEQUENTIAL).forPath(address, data.getBytes());
-        } catch (Exception e) {
-            e.printStackTrace();
+            client.create().creatingParentContainersIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(address, data.getBytes());
+        }catch (KeeperException.NoChildrenForEphemeralsException e) {
+            try {
+                client.setData().forPath(address, data.getBytes());
+            } catch (Exception ex) {
+                throw new IllegalStateException(ex.getMessage(), ex);
+            }
+        } catch (Exception ex) {
+            throw new IllegalStateException(ex.getMessage(), ex);
         }
     }
 
     @Override
     public void createTemporarySeqData(String address, String data) {
         try {
-            client.create().creatingParentContainersIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(address, data.getBytes());
-        } catch (KeeperException.NoChildrenForEphemeralsException e) {
-
-            try {
-                client.setData().forPath(address, data.getBytes());
-            } catch (Exception ex) {
-                throw new IllegalStateException(ex.getMessage(), ex);
-            }
-
+            client.create().creatingParentContainersIfNeeded().withMode(CreateMode.EPHEMERAL_SEQUENTIAL).forPath(address, data.getBytes());
         } catch (Exception ex) {
-            throw new IllegalStateException(ex.getMessage(), ex);
+            ex.printStackTrace();
         }
     }
 
@@ -198,13 +196,13 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient {
                     @Override
                     public void process(WatchedEvent watchedEvent) {
                         System.out.println(watchedEvent.getType());
-                        if(NodeDeleted.equals(watchedEvent.getType())){
+                        if (NodeDeleted.equals(watchedEvent.getType())) {
                             ProviderNodeInfo providerNodeInfo = URL.buildURLFromUrlStr(watchedEvent.getPath());
                             System.out.println(providerNodeInfo);
                         }
                     }
                 });
-        while (true){
+        while (true) {
 
         }
     }

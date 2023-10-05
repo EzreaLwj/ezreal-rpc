@@ -18,7 +18,7 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
 
     private AbstractZookeeperClient zookeeperClient;
 
-    private final String ROOT = "/ezreal-rpc";
+    private final String ROOT = "/ezrealrpc";
 
     public ZookeeperRegister(String address) {
         this.zookeeperClient = new CuratorZookeeperClient(address);
@@ -36,7 +36,7 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
     @Override
     public void register(URL url) {
         if (!zookeeperClient.existNode(ROOT)) {
-            zookeeperClient.createTemporaryData(ROOT, "");
+            zookeeperClient.createPersistentData(ROOT, "");
         }
         String providerPath = getProviderPath(url);
         String providerPathValue = URL.buildProviderUrlStr(url);
