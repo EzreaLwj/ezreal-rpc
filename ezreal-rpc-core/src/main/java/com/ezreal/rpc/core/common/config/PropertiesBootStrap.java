@@ -9,6 +9,7 @@ public class PropertiesBootStrap {
     private final static String ADDRESS = "ezrealRpc.address";
     private final static String APPLICATION_NAME  = "ezrealRpc.applicationName";
     private final static String SERVER_PORT = "ezrealRpc.port";
+    private final static String ROUTER_STRATEGY = "ezrealRpc.routerStrategy";
 
     public static ClientConfig loadClientConfig() {
         PropertiesLoader.loadConfiguration();
@@ -16,6 +17,8 @@ public class PropertiesBootStrap {
         ClientConfig config = new ClientConfig();
         config.setAddress(PropertiesLoader.getPropertiesStr(ADDRESS));
         config.setApplicationName(PropertiesLoader.getPropertiesStr(APPLICATION_NAME));
+        config.setRouterStrategy(PropertiesLoader.getPropertiesStr(ROUTER_STRATEGY));
+
         return config;
     }
 

@@ -40,9 +40,6 @@ public class TestApi {
     }
 
     public static void main(String[] args) {
-        ListenerLoader.init();
-        UpdateServiceEvent updateServiceEvent = new UpdateServiceEvent();
-        updateServiceEvent.setData("hello world");
-        ListenerLoader.send(updateServiceEvent);
+
     }
 }

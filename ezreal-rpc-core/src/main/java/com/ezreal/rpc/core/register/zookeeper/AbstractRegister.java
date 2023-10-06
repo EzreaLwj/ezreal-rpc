@@ -4,6 +4,7 @@ import com.ezreal.rpc.core.register.RegistryService;
 import com.ezreal.rpc.core.register.URL;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.ezreal.rpc.core.common.cache.ClientServiceCache.SUBSCRIBE_SERVICE_LIST;
 import static com.ezreal.rpc.core.common.cache.ServerServiceCache.PROVIDER_URL_SET;
@@ -53,5 +54,13 @@ public abstract class AbstractRegister implements RegistryService {
      */
     public abstract List<String> getProviderIps(String serviceName);
 
+
+    /**
+     * 获取服务的权重信息
+     *
+     * @param serviceName
+     * @return <ip:port --> urlString>,<ip:port --> urlString>,<ip:port --> urlString>,<ip:port --> urlString>
+     */
+    public abstract Map<String, String> getServiceWeightMap(String serviceName);
 
 }

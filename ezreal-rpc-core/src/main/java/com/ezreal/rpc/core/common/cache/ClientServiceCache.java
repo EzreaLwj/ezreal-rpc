@@ -1,8 +1,10 @@
 package com.ezreal.rpc.core.common.cache;
 
+import com.ezreal.rpc.core.common.ChannelFuturePollingRef;
 import com.ezreal.rpc.core.common.ChannelFutureWrapper;
 import com.ezreal.rpc.core.common.RpcInvocation;
 import com.ezreal.rpc.core.common.RpcProtocol;
+import com.ezreal.rpc.core.router.IRouter;
 
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -38,5 +40,17 @@ public class ClientServiceCache {
      * 服务Set, 存放相应的IP
      */
     public static final Set<String> PROVIDERS = new HashSet<>();
+
+    //com.sise.test.service -> <<ip:host,urlString>,<ip:host,urlString>,<ip:host,urlString>>
+    public static Map<String, Map<String,String>> URL_MAP = new ConcurrentHashMap<>();
+
+    /**
+     * 服务名称->路由 channel数组
+     */
+    public static final Map<String, ChannelFutureWrapper[]> SERVICE_ROUTE_MAP = new HashMap<>();
+
+    public static final ChannelFuturePollingRef CHANNEL_FUTURE_POLLING_REF = new ChannelFuturePollingRef();
+
+    public static IRouter I_ROUTER;
 
 }

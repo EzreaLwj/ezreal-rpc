@@ -1,5 +1,6 @@
 package com.ezreal.rpc.core.common.cache;
 
+import com.ezreal.rpc.core.register.RegistryService;
 import com.ezreal.rpc.core.register.URL;
 
 import java.util.HashMap;
@@ -22,5 +23,7 @@ public class ServerServiceCache {
      * 服务提供者列表
      */
     public static final Set<URL> PROVIDER_URL_SET = new HashSet<>();
+
+    public static RegistryService REGISTRY_SERVICE;
 
 }

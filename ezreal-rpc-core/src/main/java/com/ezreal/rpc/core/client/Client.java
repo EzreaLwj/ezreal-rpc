@@ -10,6 +10,8 @@ import com.ezreal.rpc.core.common.utils.CommonUtil;
 import com.ezreal.rpc.core.register.URL;
 import com.ezreal.rpc.core.register.zookeeper.AbstractRegister;
 import com.ezreal.rpc.core.register.zookeeper.ZookeeperRegister;
+import com.ezreal.rpc.core.router.RandomRouter;
+import com.ezreal.rpc.core.router.RotateRouter;
 import com.ezreal.rpc.test.UserService;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -23,9 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import static com.ezreal.rpc.core.common.cache.ClientServiceCache.REQUEST_QUEUE;
-import static com.ezreal.rpc.core.common.cache.ClientServiceCache.SUBSCRIBE_SERVICE_LIST;
+import static com.ezreal.rpc.core.common.cache.ClientServiceCache.*;
+import static com.ezreal.rpc.core.common.constants.RpcConstants.RANDOM_ROUTER_TYPE;
+import static com.ezreal.rpc.core.common.constants.RpcConstants.ROTATE_ROUTER_TYPE;
 
 /**
  * @author Ezreal
@@ -69,12 +73,23 @@ public class Client {
                 });
 
         listenerLoader = new ListenerLoader();
-        ListenerLoader.init();
-        clientConfig = PropertiesBootStrap.loadClientConfig();
+        listenerLoader.init();
 
         RpcReference rpcReference = new RpcReference();
         rpcReference.setProxyFactory(new JDKProxyFactory());
         return rpcReference;
+    }
+
+    /**
+     * 初始化客户端配置文件
+     */
+    private void initClientConfig() {
+        clientConfig = PropertiesBootStrap.loadClientConfig();
+        if (RANDOM_ROUTER_TYPE.equals(clientConfig.getRouterStrategy())) {
+            I_ROUTER = new RandomRouter();
+        } else if(ROTATE_ROUTER_TYPE.equals(clientConfig.getRouterStrategy())) {
+            I_ROUTER = new RotateRouter();
+        }
     }
 
     /**
@@ -87,13 +102,17 @@ public class Client {
             register = new ZookeeperRegister(clientConfig.getAddress());
         }
 
+        String serviceName = beanServiceClass.getName();
         URL url = new URL();
-        url.setServiceName(beanServiceClass.getName());
+        url.setServiceName(serviceName);
         url.setApplicationName(clientConfig.getApplicationName());
         HashMap<String, String> params = new HashMap<>();
         params.put("host", CommonUtil.getIpAddress());
         url.setParams(params);
 
+        // 获取服务的权重
+        Map<String, String> weightMap = register.getServiceWeightMap(serviceName);
+        URL_MAP.put(serviceName, weightMap);
         register.subscribe(url);
     }
 
@@ -116,7 +135,10 @@ public class Client {
 
             URL url = new URL();
             url.setServiceName(serviceName);
-
+            HashMap<String, String> params = new HashMap<>();
+            params.put("providerPath", serviceName + "/provider");
+            params.put("providerIps", JSON.toJSONString(providerIps));
+            url.setParams(params);
             // 后续监听该服务节点的变化
             register.doAfterSubscribe(url);
         }
@@ -159,6 +181,7 @@ public class Client {
 
         // 创建客户端获取代理工厂
         Client client = new Client();
+        client.initClientConfig();
         RpcReference rpcReference = client.initClientApplication();
 
         // 获取代理对象，代理对象拦截方法，通过SEND_QUEUE通信

@@ -1,20 +1,31 @@
 package com.ezreal.rpc.core.register.zookeeper;
 
+import com.alibaba.fastjson.JSON;
 import com.ezreal.rpc.core.common.event.ListenerLoader;
 import com.ezreal.rpc.core.common.event.UpdateServiceEvent;
+import com.ezreal.rpc.core.common.event.WeightDataChangeEvent;
 import com.ezreal.rpc.core.common.event.data.URLChangeWrapper;
 import com.ezreal.rpc.core.register.RegistryService;
 import com.ezreal.rpc.core.register.URL;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+
+import static com.ezreal.rpc.core.common.cache.ClientServiceCache.I_ROUTER;
 
 /**
  * @author Ezreal
  * @Date 2023/10/4
  */
 public class ZookeeperRegister extends AbstractRegister implements RegistryService {
+
+    private Logger logger = LoggerFactory.getLogger(ZookeeperRegister.class);
 
     private AbstractZookeeperClient zookeeperClient;
 
@@ -29,7 +40,7 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
     }
 
     private String getConsumerPath(URL url) {
-        return ROOT + "/" + url.getServiceName() + "/consumer/" + url.getApplicationName() + ":" + url.getParams().get("host") + ":" + url.getParams().get("port");
+        return ROOT + "/" + url.getServiceName() + "/consumer/" + url.getApplicationName() + ":" + url.getParams().get("host");
 
     }
 
@@ -87,16 +98,53 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
 
     @Override
     public void doAfterSubscribe(URL url) {
+        HashMap<String, String> params = url.getParams();
         // 监听是否有新的服务注册上来
-        String newServerNodePath = ROOT + "/" + url.getServiceName() + "/provider";
+        String newServerNodePath = ROOT + "/" + params.get("providerPath");
+        logger.info("监听的子节点列表路径为：" + newServerNodePath);
         watchNewServerNode(newServerNodePath);
+
+        // 监听服务的权值是否发生变化
+        List<String> ips = JSON.parseObject(params.get("providerIps"), List.class);
+        for (String ip : ips) {
+            String watchPath = newServerNodePath + "/" + ip;
+            logger.info("监听的节点值路径为：" + watchPath);
+            watchDataChange(watchPath);
+        }
+    }
+
+    /**
+     * 监听服务节点的权值是否发生变化
+     *
+     * @param serverNodeDataPath 变化路径
+     */
+    private void watchDataChange(String serverNodeDataPath) {
+        zookeeperClient.watchChildNodeData(serverNodeDataPath, new Watcher() {
+            @Override
+            public void process(WatchedEvent watchedEvent) {
+
+                logger.info("节点的值发生变化...");
+                // 获取变化后节点的值
+                String nodeData = zookeeperClient.getNodeData(serverNodeDataPath);
+                nodeData = nodeData.replace(";", "/");
+
+                // 解析节点的值 封装成一个 ProviderNodeInfo
+                ProviderNodeInfo providerNodeInfo = URL.buildURLFromUrlStr(nodeData);
+                WeightDataChangeEvent weightDataChangeEvent = new WeightDataChangeEvent();
+                weightDataChangeEvent.setData(providerNodeInfo);
+                ListenerLoader.send(weightDataChangeEvent);
+
+                // 继续监听
+                watchDataChange(serverNodeDataPath);
+            }
+        });
     }
 
     private void watchNewServerNode(String newServerNodePath) {
         zookeeperClient.watchChildNodeData(newServerNodePath, new Watcher() {
             @Override
             public void process(WatchedEvent watchedEvent) {
-
+                logger.info("服务提供方发生变化...");
                 String path = watchedEvent.getPath();
                 List<String> childrenData = zookeeperClient.getChildrenData(path);
                 String serviceName = path.split("/")[2];
@@ -104,6 +152,7 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
                 URLChangeWrapper urlChangerWrapper = new URLChangeWrapper();
                 urlChangerWrapper.setProviderUrl(childrenData);
                 urlChangerWrapper.setServiceName(serviceName);
+
                 // 异步解耦
                 UpdateServiceEvent updateServiceEvent = new UpdateServiceEvent();
                 updateServiceEvent.setData(urlChangerWrapper);
@@ -119,6 +168,18 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
     public List<String> getProviderIps(String serviceName) {
         List<String> ips = zookeeperClient.getChildrenData(ROOT + "/" + serviceName + "/provider");
         return ips;
+    }
+
+    @Override
+    public Map<String, String> getServiceWeightMap(String serviceName) {
+        List<String> childrenDatas = zookeeperClient.getChildrenData(ROOT + "/" + serviceName + "/provider");
+        Map<String, String> result = new HashMap<>();
+
+        for (String childrenData : childrenDatas) {
+            String nodeData = zookeeperClient.getNodeData(ROOT + "/" + serviceName + "/provider/" + childrenData);
+            result.put(childrenData, nodeData);
+        }
+        return result;
     }
 
 }

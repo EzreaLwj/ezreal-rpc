@@ -54,7 +54,7 @@ public class URL {
         String host = url.getParams().get("host");
         String port = url.getParams().get("port");
 
-        return new String((url.getApplicationName() + ";" + url.getServiceName() + ";" + host + ":" + port + ";" + System.currentTimeMillis()).getBytes(), StandardCharsets.UTF_8);
+        return new String((url.getApplicationName() + ";" + url.getServiceName() + ";" + host + ":" + port + ";" + System.currentTimeMillis() + ";100").getBytes(), StandardCharsets.UTF_8);
     }
 
     /**
@@ -88,8 +88,10 @@ public class URL {
         String[] strings = providerUrlStr.split("/");
 
         ProviderNodeInfo providerNodeInfo = new ProviderNodeInfo();
-        providerNodeInfo.setServiceName(strings[2]);
-        providerNodeInfo.setAddress(strings[4]);
+        providerNodeInfo.setServiceName(strings[1]);
+        providerNodeInfo.setAddress(strings[2]);
+        providerNodeInfo.setRegistryTime(strings[3]);
+        providerNodeInfo.setWeight(Integer.valueOf(strings[4]));
         return providerNodeInfo;
     }
 }

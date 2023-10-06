@@ -10,6 +10,8 @@ public class ClientConfig {
 
     private String address;
 
+    private String routerStrategy;
+
     public ClientConfig() {
     }
 
@@ -32,5 +34,13 @@ public class ClientConfig {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getRouterStrategy() {
+        return routerStrategy;
+    }
+
+    public void setRouterStrategy(String routerStrategy) {
+        this.routerStrategy = routerStrategy;
     }
 }

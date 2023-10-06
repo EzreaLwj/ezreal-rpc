@@ -1,6 +1,8 @@
 package com.ezreal.rpc.core.common.event;
 
+import com.ezreal.rpc.core.common.event.listener.ServiceDestroyListener;
 import com.ezreal.rpc.core.common.event.listener.UpdateServiceListener;
+import com.ezreal.rpc.core.common.event.listener.WeightDataChangeListener;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -19,8 +21,10 @@ public class ListenerLoader {
 
     private static ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
 
-    public static void init() {
+    public void init() {
         listeners.add(new UpdateServiceListener());
+        listeners.add(new WeightDataChangeListener());
+        listeners.add(new ServiceDestroyListener());
     }
 
     public static void registerListener(RpcListener<RpcEvent> listener) {

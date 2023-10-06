@@ -2,6 +2,8 @@ package com.ezreal.rpc.core.client;
 
 import com.ezreal.rpc.core.common.ChannelFutureWrapper;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
+import com.ezreal.rpc.core.register.URL;
+import com.ezreal.rpc.core.router.Selector;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 
@@ -9,8 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static com.ezreal.rpc.core.common.cache.ClientServiceCache.CONNECT_MAP;
-import static com.ezreal.rpc.core.common.cache.ClientServiceCache.PROVIDERS;
+import static com.ezreal.rpc.core.common.cache.ClientServiceCache.*;
 
 /**
  * @author Ezreal
@@ -36,9 +37,11 @@ public class ConnectHandler {
         String[] split = address.split(":");
         ChannelFuture channelFuture = bootstrap.connect(split[0], Integer.valueOf(split[1]));
 
+        String providerUrlInfo = URL_MAP.get(serviceName).get(address);
         ChannelFutureWrapper channelFutureWrapper = new ChannelFutureWrapper();
         channelFutureWrapper.setHost(split[0]);
         channelFutureWrapper.setPort(Integer.valueOf(split[1]));
+        channelFutureWrapper.setWeight(Integer.valueOf(providerUrlInfo.substring(providerUrlInfo.lastIndexOf(";")+1)));
         channelFutureWrapper.setChannelFuture(channelFuture);
 
         List<ChannelFutureWrapper> channelFutureWrappers = CONNECT_MAP.get(serviceName);
@@ -49,6 +52,11 @@ public class ConnectHandler {
         channelFutureWrappers.add(channelFutureWrapper);
         PROVIDERS.add(address);
         CONNECT_MAP.put(serviceName, channelFutureWrappers);
+
+        // 根据路由数组生成策略
+        Selector selector = new Selector();
+        selector.setServiceName(serviceName);
+        I_ROUTER.refreshRouteArr(selector);
     }
 
     public static ChannelFuture createChannelFuture(String host, Integer port) {
@@ -66,6 +74,12 @@ public class ConnectHandler {
         if (channelFutureWrappers == null) {
             throw new RuntimeException("the channelFutures is not exist , serviceName: " + serviceName);
         }
-        return channelFutureWrappers.get(new Random().nextInt(channelFutureWrappers.size())).getChannelFuture();
+
+        Selector selector = new Selector();
+        selector.setServiceName(serviceName);
+        ChannelFutureWrapper channelFutureWrapper = I_ROUTER.select(selector);
+
+        System.out.println("调用信息为: host: " + channelFutureWrapper.getHost() + " port:" + channelFutureWrapper.getPort());
+        return channelFutureWrapper.getChannelFuture();
     }
 }

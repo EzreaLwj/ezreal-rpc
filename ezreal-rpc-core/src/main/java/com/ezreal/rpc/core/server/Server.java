@@ -4,6 +4,7 @@ import com.ezreal.rpc.core.common.RpcDecoder;
 import com.ezreal.rpc.core.common.RpcEncoder;
 import com.ezreal.rpc.core.common.config.PropertiesBootStrap;
 import com.ezreal.rpc.core.common.config.ServerConfig;
+import com.ezreal.rpc.core.common.event.ListenerLoader;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
 import com.ezreal.rpc.core.register.URL;
 import com.ezreal.rpc.core.register.zookeeper.AbstractRegister;
@@ -22,8 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 
-import static com.ezreal.rpc.core.common.cache.ServerServiceCache.PROVIDER_CLASS_MAP;
-import static com.ezreal.rpc.core.common.cache.ServerServiceCache.PROVIDER_URL_SET;
+import static com.ezreal.rpc.core.common.cache.ServerServiceCache.*;
 
 /**
  * @author Ezreal
@@ -39,7 +39,8 @@ public class Server {
 
     private EventLoopGroup workerEventLoopGroup;
 
-    private AbstractRegister register;
+
+    private static ListenerLoader listenerLoader;
 
     private void initServerConfig() {
         this.serverConfig = PropertiesBootStrap.loadServerConfig();
@@ -81,8 +82,8 @@ public class Server {
             throw new RuntimeException("the object only has one interface");
         }
 
-        if (register == null) {
-            register = new ZookeeperRegister(serverConfig.getAddress());
+        if (REGISTRY_SERVICE == null) {
+            REGISTRY_SERVICE = new ZookeeperRegister(serverConfig.getAddress());
         }
 
         // 默认实现第一个接口
@@ -110,7 +111,7 @@ public class Server {
                     throw new RuntimeException(e);
                 }
                 for (URL url : PROVIDER_URL_SET) {
-                    register.register(url);
+                    REGISTRY_SERVICE.register(url);
                 }
             }
         }).start();
@@ -118,9 +119,19 @@ public class Server {
 
     public static void main(String[] args) throws InterruptedException {
 
+        // 初始化配置
         Server server = new Server();
         server.initServerConfig();
+
+        // 配置事件监听
+        listenerLoader = new ListenerLoader();
+        listenerLoader.init();
+
+        // 暴露服务
         server.exportService(new UserServiceImpl());
+        // 注册钩子
+        ApplicationShutdownHook.registryShutDownHook();
+
         server.setOnApplication();
     }
 
