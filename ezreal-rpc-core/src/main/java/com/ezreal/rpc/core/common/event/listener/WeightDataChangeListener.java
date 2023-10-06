@@ -37,7 +37,7 @@ public class WeightDataChangeListener implements RpcListener<WeightDataChangeEve
                 channelFutureWrapper.setWeight(providerNodeInfo.getWeight());
 
                 URL url = new URL();
-                url.setApplicationName(providerNodeInfo.getServiceName());
+                url.setServiceName(providerNodeInfo.getServiceName());
                 I_ROUTER.updateWeight(url);
                 break;
             }

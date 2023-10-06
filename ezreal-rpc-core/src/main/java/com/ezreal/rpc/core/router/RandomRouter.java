@@ -52,7 +52,7 @@ public class RandomRouter implements IRouter {
         for (int i = 0; i < randomArr.length; i++) {
             channelRoutes[i] = channelFutureWrappers.get(randomArr[i]);
         }
-
+        SERVICE_ROUTE_MAP.put(serviceName, channelRoutes);
     }
 
     /**

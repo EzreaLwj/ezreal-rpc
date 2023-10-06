@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.Random;
 
 /**
  * @author Ezreal
@@ -40,6 +41,7 @@ public class TestApi {
     }
 
     public static void main(String[] args) {
-
+        Random random = new Random();
+        random.nextInt();
     }
 }

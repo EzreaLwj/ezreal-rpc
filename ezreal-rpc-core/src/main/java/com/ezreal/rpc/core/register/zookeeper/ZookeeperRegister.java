@@ -119,11 +119,11 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
      * @param serverNodeDataPath 变化路径
      */
     private void watchDataChange(String serverNodeDataPath) {
-        zookeeperClient.watchChildNodeData(serverNodeDataPath, new Watcher() {
+        zookeeperClient.watchNodeData(serverNodeDataPath, new Watcher() {
             @Override
             public void process(WatchedEvent watchedEvent) {
 
-                logger.info("节点的值发生变化...");
+                logger.info("节点的权值发生变化...");
                 // 获取变化后节点的值
                 String nodeData = zookeeperClient.getNodeData(serverNodeDataPath);
                 nodeData = nodeData.replace(";", "/");
