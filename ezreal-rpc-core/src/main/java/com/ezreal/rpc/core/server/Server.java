@@ -9,6 +9,8 @@ import com.ezreal.rpc.core.common.utils.CommonUtil;
 import com.ezreal.rpc.core.register.URL;
 import com.ezreal.rpc.core.register.zookeeper.AbstractRegister;
 import com.ezreal.rpc.core.register.zookeeper.ZookeeperRegister;
+import com.ezreal.rpc.core.serialize.fastjson.FastJsonSerializeFactory;
+import com.ezreal.rpc.core.serialize.jdk.JDKSerializeFactory;
 import com.ezreal.rpc.test.UserServiceImpl;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -23,7 +25,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 
+import static com.ezreal.rpc.core.common.cache.ClientServiceCache.CLIENT_SERIALIZE_FACTORY;
 import static com.ezreal.rpc.core.common.cache.ServerServiceCache.*;
+import static com.ezreal.rpc.core.common.constants.RpcConstants.FAST_JSON_SERIALIZE_TYPE;
+import static com.ezreal.rpc.core.common.constants.RpcConstants.JDK_SERIALIZE_TYPE;
 
 /**
  * @author Ezreal
@@ -44,6 +49,19 @@ public class Server {
 
     private void initServerConfig() {
         this.serverConfig = PropertiesBootStrap.loadServerConfig();
+
+        String serverSerialize = serverConfig.getServerSerialize();
+        switch (serverSerialize) {
+            case JDK_SERIALIZE_TYPE:
+                SERVER_SERIALIZE_FACTORY = new JDKSerializeFactory();
+                break;
+            case FAST_JSON_SERIALIZE_TYPE:
+                SERVER_SERIALIZE_FACTORY = new FastJsonSerializeFactory();
+                break;
+            default:
+                SERVER_SERIALIZE_FACTORY = new JDKSerializeFactory();
+                break;
+        }
     }
 
     public void setOnApplication() throws InterruptedException {

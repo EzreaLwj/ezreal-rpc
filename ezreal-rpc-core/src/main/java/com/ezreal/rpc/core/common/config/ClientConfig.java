@@ -12,6 +12,8 @@ public class ClientConfig {
 
     private String routerStrategy;
 
+    private String clientSerialize;
+
     public ClientConfig() {
     }
 
@@ -42,5 +44,13 @@ public class ClientConfig {
 
     public void setRouterStrategy(String routerStrategy) {
         this.routerStrategy = routerStrategy;
+    }
+
+    public String getClientSerialize() {
+        return clientSerialize;
+    }
+
+    public void setClientSerialize(String clientSerialize) {
+        this.clientSerialize = clientSerialize;
     }
 }

@@ -12,6 +12,8 @@ public class ServerConfig {
 
     private Integer port;
 
+    private String serverSerialize;
+
     public ServerConfig() {
     }
 
@@ -37,5 +39,13 @@ public class ServerConfig {
 
     public void setPort(Integer port) {
         this.port = port;
+    }
+
+    public String getServerSerialize() {
+        return serverSerialize;
+    }
+
+    public void setServerSerialize(String serverSerialize) {
+        this.serverSerialize = serverSerialize;
     }
 }

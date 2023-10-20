@@ -9,6 +9,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import java.lang.reflect.Method;
 
 import static com.ezreal.rpc.core.common.cache.ServerServiceCache.PROVIDER_CLASS_MAP;
+import static com.ezreal.rpc.core.common.cache.ServerServiceCache.SERVER_SERIALIZE_FACTORY;
 
 /**
  * @author Ezreal
@@ -20,8 +21,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 
         RpcProtocol rpcProtocol = (RpcProtocol) msg;
-        String json = new String(rpcProtocol.getContent(), 0, rpcProtocol.getContentLength());
-        RpcInvocation rpcInvocation = JSON.parseObject(json, RpcInvocation.class);
+        RpcInvocation rpcInvocation = SERVER_SERIALIZE_FACTORY.deserialize(rpcProtocol.getContent(), RpcInvocation.class);
 
         String serviceName = rpcInvocation.getServiceName();
         Object beanService = PROVIDER_CLASS_MAP.get(serviceName);
@@ -39,7 +39,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
         }
 
         rpcInvocation.setResponse(result);
-        RpcProtocol responseRpcProtocol = new RpcProtocol(JSON.toJSONString(rpcInvocation).getBytes());
+        RpcProtocol responseRpcProtocol = new RpcProtocol(SERVER_SERIALIZE_FACTORY.serialize(rpcInvocation));
         ctx.writeAndFlush(responseRpcProtocol);
     }
 

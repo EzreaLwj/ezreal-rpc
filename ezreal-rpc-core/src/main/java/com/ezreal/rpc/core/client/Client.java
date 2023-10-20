@@ -12,6 +12,8 @@ import com.ezreal.rpc.core.register.zookeeper.AbstractRegister;
 import com.ezreal.rpc.core.register.zookeeper.ZookeeperRegister;
 import com.ezreal.rpc.core.router.RandomRouter;
 import com.ezreal.rpc.core.router.RotateRouter;
+import com.ezreal.rpc.core.serialize.fastjson.FastJsonSerializeFactory;
+import com.ezreal.rpc.core.serialize.jdk.JDKSerializeFactory;
 import com.ezreal.rpc.test.UserService;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -28,8 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.ezreal.rpc.core.common.cache.ClientServiceCache.*;
-import static com.ezreal.rpc.core.common.constants.RpcConstants.RANDOM_ROUTER_TYPE;
-import static com.ezreal.rpc.core.common.constants.RpcConstants.ROTATE_ROUTER_TYPE;
+import static com.ezreal.rpc.core.common.constants.RpcConstants.*;
 
 /**
  * @author Ezreal
@@ -89,6 +90,19 @@ public class Client {
             I_ROUTER = new RandomRouter();
         } else if(ROTATE_ROUTER_TYPE.equals(clientConfig.getRouterStrategy())) {
             I_ROUTER = new RotateRouter();
+        }
+
+        String clientSerialize = clientConfig.getClientSerialize();
+        switch (clientSerialize) {
+            case JDK_SERIALIZE_TYPE:
+                CLIENT_SERIALIZE_FACTORY = new JDKSerializeFactory();
+                break;
+            case FAST_JSON_SERIALIZE_TYPE:
+                CLIENT_SERIALIZE_FACTORY = new FastJsonSerializeFactory();
+                break;
+            default:
+                CLIENT_SERIALIZE_FACTORY = new JDKSerializeFactory();
+                break;
         }
     }
 
@@ -163,8 +177,7 @@ public class Client {
                 while (true) {
                     // 线程会阻塞在这里
                     RpcInvocation rpcInvocation = REQUEST_QUEUE.take();
-                    String json = JSON.toJSONString(rpcInvocation);
-                    RpcProtocol rpcProtocol = new RpcProtocol(json.getBytes());
+                    RpcProtocol rpcProtocol = new RpcProtocol(CLIENT_SERIALIZE_FACTORY.serialize(rpcInvocation));
 
                     // 根据服务名称获取响应的通信管道
                     ChannelFuture channelFuture = ConnectHandler.getChannelFuture(rpcInvocation.getServiceName());
@@ -200,7 +213,7 @@ public class Client {
         for (int i = 0; i < 22; i++){
             Thread.sleep(500);
             // 发送请求消息
-            System.out.println(userService.getUserInfo("lwj", 1));
+            System.out.println(userService.getUserInfo("lwj", i));
         }
     }
 

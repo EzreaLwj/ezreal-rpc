@@ -11,6 +11,10 @@ public class PropertiesBootStrap {
     private final static String SERVER_PORT = "ezrealRpc.port";
     private final static String ROUTER_STRATEGY = "ezrealRpc.routerStrategy";
 
+    private final static String SERVER_SERIALIZE = "ezrealRpc.serverSerialize";
+
+    private final static String CLIENT_SERIALIZE = "ezrealRpc.clientSerialize";
+
     public static ClientConfig loadClientConfig() {
         PropertiesLoader.loadConfiguration();
 
@@ -18,6 +22,7 @@ public class PropertiesBootStrap {
         config.setAddress(PropertiesLoader.getPropertiesStr(ADDRESS));
         config.setApplicationName(PropertiesLoader.getPropertiesStr(APPLICATION_NAME));
         config.setRouterStrategy(PropertiesLoader.getPropertiesStr(ROUTER_STRATEGY));
+        config.setClientSerialize(PropertiesLoader.getPropertiesStr(CLIENT_SERIALIZE));
 
         return config;
     }
@@ -29,6 +34,7 @@ public class PropertiesBootStrap {
         serverConfig.setPort(PropertiesLoader.getPropertiesInteger(SERVER_PORT));
         serverConfig.setAddress(PropertiesLoader.getPropertiesStr(ADDRESS));
         serverConfig.setApplicationName(PropertiesLoader.getPropertiesStr(APPLICATION_NAME));
+        serverConfig.setServerSerialize(PropertiesLoader.getPropertiesStr(SERVER_SERIALIZE));
         return serverConfig;
     }
 }

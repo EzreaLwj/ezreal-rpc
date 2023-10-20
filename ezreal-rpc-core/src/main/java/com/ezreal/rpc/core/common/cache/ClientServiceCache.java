@@ -5,6 +5,7 @@ import com.ezreal.rpc.core.common.ChannelFutureWrapper;
 import com.ezreal.rpc.core.common.RpcInvocation;
 import com.ezreal.rpc.core.common.RpcProtocol;
 import com.ezreal.rpc.core.router.IRouter;
+import com.ezreal.rpc.core.serialize.SerializeFactory;
 
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -52,5 +53,7 @@ public class ClientServiceCache {
     public static final ChannelFuturePollingRef CHANNEL_FUTURE_POLLING_REF = new ChannelFuturePollingRef();
 
     public static IRouter I_ROUTER;
+
+    public static SerializeFactory CLIENT_SERIALIZE_FACTORY;
 
 }

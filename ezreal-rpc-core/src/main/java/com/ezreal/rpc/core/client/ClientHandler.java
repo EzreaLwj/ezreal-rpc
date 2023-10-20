@@ -6,6 +6,7 @@ import com.ezreal.rpc.core.common.RpcProtocol;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
+import static com.ezreal.rpc.core.common.cache.ClientServiceCache.CLIENT_SERIALIZE_FACTORY;
 import static com.ezreal.rpc.core.common.cache.ClientServiceCache.RESP_MESSAGE;
 
 /**
@@ -17,9 +18,10 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         RpcProtocol rpcProtocol = (RpcProtocol) msg;
+
         byte[] content = rpcProtocol.getContent();
-        String json = new String(content, 0, rpcProtocol.getContentLength());
-        RpcInvocation rpcInvocation = JSON.parseObject(json, RpcInvocation.class);
+        RpcInvocation rpcInvocation = CLIENT_SERIALIZE_FACTORY.deserialize(content,RpcInvocation.class);
+
         if (!RESP_MESSAGE.containsKey(rpcInvocation.getUuid())) {
             throw new RuntimeException("the request is not exist");
         }

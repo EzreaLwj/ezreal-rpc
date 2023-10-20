@@ -2,6 +2,7 @@ package com.ezreal.rpc.core.common.cache;
 
 import com.ezreal.rpc.core.register.RegistryService;
 import com.ezreal.rpc.core.register.URL;
+import com.ezreal.rpc.core.serialize.SerializeFactory;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,5 +26,7 @@ public class ServerServiceCache {
     public static final Set<URL> PROVIDER_URL_SET = new HashSet<>();
 
     public static RegistryService REGISTRY_SERVICE;
+
+    public static SerializeFactory SERVER_SERIALIZE_FACTORY;
 
 }
