@@ -1,10 +1,16 @@
 package com.ezreal.rpc.core.common;
 
+import java.io.Serializable;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * @author Ezreal
  * @Date 2023/10/2
  */
-public class RpcInvocation {
+public class RpcInvocation implements Serializable {
+
+    private static final long serialVersionUID = 8771637069558685122L;
 
     /**
      * 类的全路径
@@ -30,6 +36,8 @@ public class RpcInvocation {
      * 返回值
      */
     private Object response;
+
+    private Map<String, Object> attachments = new ConcurrentHashMap<>();
 
     public String getServiceName() {
         return serviceName;
@@ -69,5 +77,13 @@ public class RpcInvocation {
 
     public void setResponse(Object response) {
         this.response = response;
+    }
+
+    public Map<String, Object> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(Map<String, Object> attachments) {
+        this.attachments = attachments;
     }
 }

@@ -12,10 +12,9 @@ public class ChannelFuturePollingRef {
 
     private AtomicInteger atomicLong = new AtomicInteger(0);
 
-    public ChannelFutureWrapper getChannelFutureWrapper(String serviceName) {
-        ChannelFutureWrapper[] channelFutureWrappers = SERVICE_ROUTE_MAP.get(serviceName);
-        int len = channelFutureWrappers.length;
+    public ChannelFutureWrapper getChannelFutureWrapper(ChannelFutureWrapper[] arr) {
+        int len = arr.length;
         int incr = atomicLong.incrementAndGet();
-        return channelFutureWrappers[incr % len];
+        return arr[incr % len];
     }
 }

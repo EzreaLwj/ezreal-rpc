@@ -16,6 +16,8 @@ public class ProviderNodeInfo {
 
     private String registryTime;
 
+    private String group;
+
     public ProviderNodeInfo() {
     }
 
@@ -51,13 +53,22 @@ public class ProviderNodeInfo {
         this.registryTime = registryTime;
     }
 
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
+    }
+
     @Override
     public String toString() {
         return "ProviderNodeInfo{" +
                 "serviceName='" + serviceName + '\'' +
                 ", address='" + address + '\'' +
-                ", weight='" + weight + '\'' +
+                ", weight=" + weight +
                 ", registryTime='" + registryTime + '\'' +
+                ", group='" + group + '\'' +
                 '}';
     }
 }

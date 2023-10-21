@@ -30,7 +30,7 @@ public class RotateRouter implements IRouter{
 
     @Override
     public ChannelFutureWrapper select(Selector selector) {
-        return CHANNEL_FUTURE_POLLING_REF.getChannelFutureWrapper(selector.getServiceName());
+        return CHANNEL_FUTURE_POLLING_REF.getChannelFutureWrapper(selector.getChannelFutureWrappers());
     }
 
     @Override

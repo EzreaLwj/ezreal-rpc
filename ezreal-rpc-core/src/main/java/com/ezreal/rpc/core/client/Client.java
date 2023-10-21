@@ -7,6 +7,10 @@ import com.ezreal.rpc.core.common.config.PropertiesBootStrap;
 import com.ezreal.rpc.core.common.event.ListenerLoader;
 import com.ezreal.rpc.core.common.proxy.jdk.JDKProxyFactory;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
+import com.ezreal.rpc.core.filter.client.ClientFilterChain;
+import com.ezreal.rpc.core.filter.client.ClientGroupFilterImpl;
+import com.ezreal.rpc.core.filter.client.ClientLogFilterImpl;
+import com.ezreal.rpc.core.filter.client.DirectInvokeFilterImpl;
 import com.ezreal.rpc.core.register.URL;
 import com.ezreal.rpc.core.register.zookeeper.AbstractRegister;
 import com.ezreal.rpc.core.register.zookeeper.ZookeeperRegister;
@@ -91,6 +95,7 @@ public class Client {
         } else if(ROTATE_ROUTER_TYPE.equals(clientConfig.getRouterStrategy())) {
             I_ROUTER = new RotateRouter();
         }
+        CLIENT_CONFIG = clientConfig;
 
         String clientSerialize = clientConfig.getClientSerialize();
         switch (clientSerialize) {
@@ -104,6 +109,12 @@ public class Client {
                 CLIENT_SERIALIZE_FACTORY = new JDKSerializeFactory();
                 break;
         }
+
+        ClientFilterChain clientFilterChain = new ClientFilterChain();
+        clientFilterChain.addFilter(new ClientGroupFilterImpl());
+        clientFilterChain.addFilter(new ClientLogFilterImpl());
+        clientFilterChain.addFilter(new DirectInvokeFilterImpl());
+        CLIENT_FILTER_CHAIN = clientFilterChain;
     }
 
     /**
@@ -180,7 +191,7 @@ public class Client {
                     RpcProtocol rpcProtocol = new RpcProtocol(CLIENT_SERIALIZE_FACTORY.serialize(rpcInvocation));
 
                     // 根据服务名称获取响应的通信管道
-                    ChannelFuture channelFuture = ConnectHandler.getChannelFuture(rpcInvocation.getServiceName());
+                    ChannelFuture channelFuture = ConnectHandler.getChannelFuture(rpcInvocation);
                     channelFuture.channel().writeAndFlush(rpcProtocol);
                 }
             } catch (Exception e) {
@@ -197,8 +208,12 @@ public class Client {
         client.initClientConfig();
         RpcReference rpcReference = client.initClientApplication();
 
+        RpcReferenceWrapper<UserService> rpcReferenceWrapper = new RpcReferenceWrapper<>();
+        rpcReferenceWrapper.setGroup("dev");
+        rpcReferenceWrapper.setServiceToken("token-a");
+        rpcReferenceWrapper.setAimClass(UserService.class);
         // 获取代理对象，代理对象拦截方法，通过SEND_QUEUE通信
-        UserService userService = rpcReference.getProxy(UserService.class);
+        UserService userService = rpcReference.get(rpcReferenceWrapper);
 
         // 订阅服务，将信息加入到 SUBSCRIBE_SERVICE_LIST 集合中
         client.subscribeService(UserService.class);

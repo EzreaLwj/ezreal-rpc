@@ -1,13 +1,16 @@
 package com.ezreal.rpc.core.client;
 
 import com.ezreal.rpc.core.common.ChannelFutureWrapper;
+import com.ezreal.rpc.core.common.RpcInvocation;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
 import com.ezreal.rpc.core.register.URL;
+import com.ezreal.rpc.core.register.zookeeper.ProviderNodeInfo;
 import com.ezreal.rpc.core.router.Selector;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -35,14 +38,18 @@ public class ConnectHandler {
         }
 
         String[] split = address.split(":");
-        ChannelFuture channelFuture = bootstrap.connect(split[0], Integer.valueOf(split[1]));
+        String host = split[0];
+        int port = Integer.parseInt(split[1]);
+        ChannelFuture channelFuture = bootstrap.connect(host, port);
 
         String providerUrlInfo = URL_MAP.get(serviceName).get(address);
+        ProviderNodeInfo providerNodeInfo = URL.buildURLFromUrlStr(providerUrlInfo);
         ChannelFutureWrapper channelFutureWrapper = new ChannelFutureWrapper();
-        channelFutureWrapper.setHost(split[0]);
-        channelFutureWrapper.setPort(Integer.valueOf(split[1]));
-        channelFutureWrapper.setWeight(Integer.valueOf(providerUrlInfo.substring(providerUrlInfo.lastIndexOf(";")+1)));
+        channelFutureWrapper.setHost(host);
+        channelFutureWrapper.setPort(port);
+        channelFutureWrapper.setWeight(providerNodeInfo.getWeight());
         channelFutureWrapper.setChannelFuture(channelFuture);
+        channelFutureWrapper.setGroup(providerNodeInfo.getGroup());
 
         List<ChannelFutureWrapper> channelFutureWrappers = CONNECT_MAP.get(serviceName);
         if (CommonUtil.isEmpty(channelFutureWrappers)) {
@@ -65,21 +72,21 @@ public class ConnectHandler {
     }
 
     /**
-     * 根据服务名称获取对应的 channel
-     * @param serviceName
+     * 默认走随机策略获取ChannelFuture
+     *
+     * @param rpcInvocation
      * @return
      */
-    public static ChannelFuture getChannelFuture(String serviceName) {
-        List<ChannelFutureWrapper> channelFutureWrappers = CONNECT_MAP.get(serviceName);
-        if (channelFutureWrappers == null) {
-            throw new RuntimeException("the channelFutures is not exist , serviceName: " + serviceName);
+    public static ChannelFuture getChannelFuture(RpcInvocation rpcInvocation) {
+        String serviceName = rpcInvocation.getServiceName();
+        ChannelFutureWrapper[] channelFutureWrappers = SERVICE_ROUTE_MAP.get(serviceName);
+        if (channelFutureWrappers == null || channelFutureWrappers.length == 0) {
+            throw new RuntimeException("no provider exist for " + serviceName);
         }
-
+        CLIENT_FILTER_CHAIN.doFilter(Arrays.asList(channelFutureWrappers),rpcInvocation);
         Selector selector = new Selector();
         selector.setServiceName(serviceName);
-        ChannelFutureWrapper channelFutureWrapper = I_ROUTER.select(selector);
-
-        System.out.println("调用信息为: host: " + channelFutureWrapper.getHost() + " port:" + channelFutureWrapper.getPort());
-        return channelFutureWrapper.getChannelFuture();
+        selector.setChannelFutureWrappers(channelFutureWrappers);
+        return I_ROUTER.select(selector).getChannelFuture();
     }
 }

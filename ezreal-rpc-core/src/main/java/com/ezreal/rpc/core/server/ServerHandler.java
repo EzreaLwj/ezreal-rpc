@@ -8,8 +8,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 
 import java.lang.reflect.Method;
 
-import static com.ezreal.rpc.core.common.cache.ServerServiceCache.PROVIDER_CLASS_MAP;
-import static com.ezreal.rpc.core.common.cache.ServerServiceCache.SERVER_SERIALIZE_FACTORY;
+import static com.ezreal.rpc.core.common.cache.ServerServiceCache.*;
 
 /**
  * @author Ezreal
@@ -22,6 +21,9 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 
         RpcProtocol rpcProtocol = (RpcProtocol) msg;
         RpcInvocation rpcInvocation = SERVER_SERIALIZE_FACTORY.deserialize(rpcProtocol.getContent(), RpcInvocation.class);
+
+        // 执行过滤器链
+        SERVER_FILTER_CHAIN.doFilter(rpcInvocation);
 
         String serviceName = rpcInvocation.getServiceName();
         Object beanService = PROVIDER_CLASS_MAP.get(serviceName);

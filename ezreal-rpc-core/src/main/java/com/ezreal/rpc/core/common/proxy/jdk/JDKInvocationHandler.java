@@ -1,8 +1,7 @@
 package com.ezreal.rpc.core.common.proxy.jdk;
 
-import com.alibaba.fastjson.JSON;
+import com.ezreal.rpc.core.client.RpcReferenceWrapper;
 import com.ezreal.rpc.core.common.RpcInvocation;
-import com.ezreal.rpc.core.common.RpcProtocol;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -19,10 +18,10 @@ public class JDKInvocationHandler implements InvocationHandler {
 
     private final Object object = new Object();
 
-    private Class<?> targetClass;
+    private RpcReferenceWrapper rpcReferenceWrapper;
 
-    public JDKInvocationHandler(Class<?> targetClass) {
-        this.targetClass = targetClass;
+    public JDKInvocationHandler(RpcReferenceWrapper rpcReferenceWrapper) {
+        this.rpcReferenceWrapper = rpcReferenceWrapper;
     }
 
     @Override
@@ -30,10 +29,11 @@ public class JDKInvocationHandler implements InvocationHandler {
 
         RpcInvocation rpcInvocation = new RpcInvocation();
 
-        rpcInvocation.setServiceName(targetClass.getName());
+        rpcInvocation.setServiceName(rpcReferenceWrapper.getAimClass().getName());
         rpcInvocation.setMethodName(method.getName());
         rpcInvocation.setArgs(args);
         rpcInvocation.setUuid(UUID.randomUUID().toString());
+        rpcInvocation.setAttachments(rpcReferenceWrapper.getAttachments());
 
         // 放入请求体
         REQUEST_QUEUE.put(rpcInvocation);

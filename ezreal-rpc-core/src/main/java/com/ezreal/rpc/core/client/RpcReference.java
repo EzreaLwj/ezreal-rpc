@@ -1,4 +1,4 @@
-package com.ezreal.rpc.core.common;
+package com.ezreal.rpc.core.client;
 
 import com.ezreal.rpc.core.common.proxy.ProxyFactory;
 
@@ -10,17 +10,16 @@ public class RpcReference {
 
     private ProxyFactory proxyFactory;
 
-
-    public <T> T getProxy(Class<T> targetClass) {
-        return proxyFactory.getProxy(targetClass);
-    }
-
     public ProxyFactory getProxyFactory() {
         return proxyFactory;
     }
 
     public void setProxyFactory(ProxyFactory proxyFactory) {
         this.proxyFactory = proxyFactory;
+    }
+
+    public <T> T get(RpcReferenceWrapper<T> rpcReferenceWrapper) {
+        return proxyFactory.getProxy(rpcReferenceWrapper);
     }
 
 }

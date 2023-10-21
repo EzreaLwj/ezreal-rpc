@@ -4,6 +4,8 @@ import com.ezreal.rpc.core.common.ChannelFuturePollingRef;
 import com.ezreal.rpc.core.common.ChannelFutureWrapper;
 import com.ezreal.rpc.core.common.RpcInvocation;
 import com.ezreal.rpc.core.common.RpcProtocol;
+import com.ezreal.rpc.core.common.config.ClientConfig;
+import com.ezreal.rpc.core.filter.client.ClientFilterChain;
 import com.ezreal.rpc.core.router.IRouter;
 import com.ezreal.rpc.core.serialize.SerializeFactory;
 
@@ -55,5 +57,12 @@ public class ClientServiceCache {
     public static IRouter I_ROUTER;
 
     public static SerializeFactory CLIENT_SERIALIZE_FACTORY;
+
+    public static ClientConfig CLIENT_CONFIG;
+
+    /**
+     * 客户端执行器链
+     */
+    public static ClientFilterChain CLIENT_FILTER_CHAIN ;
 
 }

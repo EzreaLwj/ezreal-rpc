@@ -6,6 +6,9 @@ import com.ezreal.rpc.core.common.config.PropertiesBootStrap;
 import com.ezreal.rpc.core.common.config.ServerConfig;
 import com.ezreal.rpc.core.common.event.ListenerLoader;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
+import com.ezreal.rpc.core.filter.server.ServerFilterChain;
+import com.ezreal.rpc.core.filter.server.ServerLogFilterImpl;
+import com.ezreal.rpc.core.filter.server.ServerTokenFilterImpl;
 import com.ezreal.rpc.core.register.URL;
 import com.ezreal.rpc.core.register.zookeeper.AbstractRegister;
 import com.ezreal.rpc.core.register.zookeeper.ZookeeperRegister;
@@ -62,6 +65,11 @@ public class Server {
                 SERVER_SERIALIZE_FACTORY = new JDKSerializeFactory();
                 break;
         }
+
+        ServerFilterChain serverFilterChain = new ServerFilterChain();
+        serverFilterChain.addServerFilter(new ServerLogFilterImpl());
+        serverFilterChain.addServerFilter(new ServerTokenFilterImpl());
+        SERVER_FILTER_CHAIN = serverFilterChain;
     }
 
     public void setOnApplication() throws InterruptedException {
@@ -91,7 +99,8 @@ public class Server {
         channelFuture.channel().closeFuture().sync();
     }
 
-    public void exportService(Object beanService) {
+    public void exportService(ServiceWrapper serviceWrapper) {
+        Object beanService = serviceWrapper.getServiceObj();
         Class<?>[] interfaces = beanService.getClass().getInterfaces();
         if (interfaces.length == 0) {
             throw new RuntimeException("the object must have one interface");
@@ -115,8 +124,15 @@ public class Server {
         HashMap<String, String> params = new HashMap<>();
         params.put("host", CommonUtil.getIpAddress());
         params.put("port", String.valueOf(serverConfig.getPort()));
+        params.put("limit", String.valueOf(serviceWrapper.getLimit()));
+        params.put("group", String.valueOf(serviceWrapper.getGroup()));
+
         url.setParams(params);
         PROVIDER_URL_SET.add(url);
+
+        if (!CommonUtil.isEmpty(serviceWrapper.getServiceToken())) {
+            PROVIDER_SERVICE_WRAPPER_MAP.put(serviceName, serviceWrapper);
+        }
     }
 
     public void batchExport() {
@@ -145,8 +161,11 @@ public class Server {
         listenerLoader = new ListenerLoader();
         listenerLoader.init();
 
+        ServiceWrapper serviceWrapper = new ServiceWrapper(new UserServiceImpl(), "dev");
+        serviceWrapper.setServiceToken("token-a");
+        serviceWrapper.setLimit(2);
         // 暴露服务
-        server.exportService(new UserServiceImpl());
+        server.exportService(serviceWrapper);
         // 注册钩子
         ApplicationShutdownHook.registryShutDownHook();
 

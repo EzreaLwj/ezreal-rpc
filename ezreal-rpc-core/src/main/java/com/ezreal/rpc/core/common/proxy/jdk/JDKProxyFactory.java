@@ -1,5 +1,6 @@
 package com.ezreal.rpc.core.common.proxy.jdk;
 
+import com.ezreal.rpc.core.client.RpcReferenceWrapper;
 import com.ezreal.rpc.core.common.proxy.ProxyFactory;
 
 import java.lang.reflect.Proxy;
@@ -11,11 +12,11 @@ import java.lang.reflect.Proxy;
 public class JDKProxyFactory implements ProxyFactory {
 
     @Override
-    public <T> T getProxy(Class<T> clazz) {
-
-        return (T) Proxy.newProxyInstance(JDKProxyFactory.class.getClassLoader(),
+    public <T> T getProxy(RpcReferenceWrapper<T> rpcReferenceWrapper) {
+        Class<T> clazz = rpcReferenceWrapper.getAimClass();
+        return (T) Proxy.newProxyInstance(clazz.getClassLoader(),
                 new Class[]{clazz},
-                new JDKInvocationHandler(clazz));
+                new JDKInvocationHandler(rpcReferenceWrapper));
     }
 
 }
