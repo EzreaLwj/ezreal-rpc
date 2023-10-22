@@ -92,7 +92,7 @@ public class Client {
     /**
      * 初始化客户端配置文件
      */
-    private void initClientConfig() throws Exception {
+    public void initClientConfig() throws Exception {
         clientConfig = PropertiesBootStrap.loadClientConfig();
 
         // 加载路由策略
@@ -126,7 +126,7 @@ public class Client {
      *
      * @param beanServiceClass 需要订阅的对象
      */
-    private void subscribeService(Class<?> beanServiceClass) {
+    public void subscribeService(Class<?> beanServiceClass) {
         if (register == null) {
 
             // 使用SPI技术优化

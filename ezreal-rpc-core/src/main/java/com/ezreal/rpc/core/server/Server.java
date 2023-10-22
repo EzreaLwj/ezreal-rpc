@@ -57,7 +57,7 @@ public class Server {
 
     private static ListenerLoader listenerLoader;
 
-    private void initServerConfig() throws Exception {
+    public void initServerConfig() throws Exception {
 
         this.serverConfig = PropertiesBootStrap.loadServerConfig();
 
