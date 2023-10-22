@@ -6,14 +6,17 @@ import com.ezreal.rpc.core.common.config.PropertiesBootStrap;
 import com.ezreal.rpc.core.common.config.ServerConfig;
 import com.ezreal.rpc.core.common.event.ListenerLoader;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
+import com.ezreal.rpc.core.filter.IServerFilter;
 import com.ezreal.rpc.core.filter.server.ServerFilterChain;
 import com.ezreal.rpc.core.filter.server.ServerLogFilterImpl;
 import com.ezreal.rpc.core.filter.server.ServerTokenFilterImpl;
 import com.ezreal.rpc.core.register.URL;
 import com.ezreal.rpc.core.register.zookeeper.AbstractRegister;
 import com.ezreal.rpc.core.register.zookeeper.ZookeeperRegister;
+import com.ezreal.rpc.core.serialize.SerializeFactory;
 import com.ezreal.rpc.core.serialize.fastjson.FastJsonSerializeFactory;
 import com.ezreal.rpc.core.serialize.jdk.JDKSerializeFactory;
+import com.ezreal.rpc.core.spi.ExtensionLoader;
 import com.ezreal.rpc.test.UserServiceImpl;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -26,9 +29,13 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Set;
 
 import static com.ezreal.rpc.core.common.cache.ClientServiceCache.CLIENT_SERIALIZE_FACTORY;
+import static com.ezreal.rpc.core.common.cache.ClientServiceCache.EXTENSION_LOADER;
 import static com.ezreal.rpc.core.common.cache.ServerServiceCache.*;
 import static com.ezreal.rpc.core.common.constants.RpcConstants.FAST_JSON_SERIALIZE_TYPE;
 import static com.ezreal.rpc.core.common.constants.RpcConstants.JDK_SERIALIZE_TYPE;
@@ -50,25 +57,25 @@ public class Server {
 
     private static ListenerLoader listenerLoader;
 
-    private void initServerConfig() {
+    private void initServerConfig() throws Exception {
+
         this.serverConfig = PropertiesBootStrap.loadServerConfig();
 
+        EXTENSION_LOADER.load(SerializeFactory.class);
+        LinkedHashMap<String, Class<?>> serializeFactoryLinkedHashMap = ExtensionLoader.CLASS_CACHE.get(SerializeFactory.class.getName());
         String serverSerialize = serverConfig.getServerSerialize();
-        switch (serverSerialize) {
-            case JDK_SERIALIZE_TYPE:
-                SERVER_SERIALIZE_FACTORY = new JDKSerializeFactory();
-                break;
-            case FAST_JSON_SERIALIZE_TYPE:
-                SERVER_SERIALIZE_FACTORY = new FastJsonSerializeFactory();
-                break;
-            default:
-                SERVER_SERIALIZE_FACTORY = new JDKSerializeFactory();
-                break;
+        Class<?> serializeFactoryClass = serializeFactoryLinkedHashMap.get(serverSerialize);
+        SERVER_SERIALIZE_FACTORY = (SerializeFactory) serializeFactoryClass.newInstance();
+
+        EXTENSION_LOADER.load(IServerFilter.class);
+        LinkedHashMap<String, Class<?>> serverFilterLinkedHashMap = ExtensionLoader.CLASS_CACHE.get(IServerFilter.class.getName());
+        Set<String> filterName = serverFilterLinkedHashMap.keySet();
+        ServerFilterChain serverFilterChain = new ServerFilterChain();
+        for (String name : filterName) {
+            Class<?> aClass = serverFilterLinkedHashMap.get(name);
+            serverFilterChain.addServerFilter((IServerFilter) aClass.newInstance());
         }
 
-        ServerFilterChain serverFilterChain = new ServerFilterChain();
-        serverFilterChain.addServerFilter(new ServerLogFilterImpl());
-        serverFilterChain.addServerFilter(new ServerTokenFilterImpl());
         SERVER_FILTER_CHAIN = serverFilterChain;
     }
 
@@ -151,7 +158,7 @@ public class Server {
         }).start();
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
 
         // 初始化配置
         Server server = new Server();

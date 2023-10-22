@@ -7,17 +7,22 @@ import com.ezreal.rpc.core.common.config.PropertiesBootStrap;
 import com.ezreal.rpc.core.common.event.ListenerLoader;
 import com.ezreal.rpc.core.common.proxy.jdk.JDKProxyFactory;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
+import com.ezreal.rpc.core.filter.IClientFilter;
 import com.ezreal.rpc.core.filter.client.ClientFilterChain;
 import com.ezreal.rpc.core.filter.client.ClientGroupFilterImpl;
 import com.ezreal.rpc.core.filter.client.ClientLogFilterImpl;
 import com.ezreal.rpc.core.filter.client.DirectInvokeFilterImpl;
+import com.ezreal.rpc.core.register.RegistryService;
 import com.ezreal.rpc.core.register.URL;
 import com.ezreal.rpc.core.register.zookeeper.AbstractRegister;
 import com.ezreal.rpc.core.register.zookeeper.ZookeeperRegister;
+import com.ezreal.rpc.core.router.IRouter;
 import com.ezreal.rpc.core.router.RandomRouter;
 import com.ezreal.rpc.core.router.RotateRouter;
+import com.ezreal.rpc.core.serialize.SerializeFactory;
 import com.ezreal.rpc.core.serialize.fastjson.FastJsonSerializeFactory;
 import com.ezreal.rpc.core.serialize.jdk.JDKSerializeFactory;
+import com.ezreal.rpc.core.spi.ExtensionLoader;
 import com.ezreal.rpc.test.UserService;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -29,9 +34,8 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 
 import static com.ezreal.rpc.core.common.cache.ClientServiceCache.*;
 import static com.ezreal.rpc.core.common.constants.RpcConstants.*;
@@ -88,33 +92,33 @@ public class Client {
     /**
      * 初始化客户端配置文件
      */
-    private void initClientConfig() {
+    private void initClientConfig() throws Exception {
         clientConfig = PropertiesBootStrap.loadClientConfig();
-        if (RANDOM_ROUTER_TYPE.equals(clientConfig.getRouterStrategy())) {
-            I_ROUTER = new RandomRouter();
-        } else if(ROTATE_ROUTER_TYPE.equals(clientConfig.getRouterStrategy())) {
-            I_ROUTER = new RotateRouter();
-        }
-        CLIENT_CONFIG = clientConfig;
 
-        String clientSerialize = clientConfig.getClientSerialize();
-        switch (clientSerialize) {
-            case JDK_SERIALIZE_TYPE:
-                CLIENT_SERIALIZE_FACTORY = new JDKSerializeFactory();
-                break;
-            case FAST_JSON_SERIALIZE_TYPE:
-                CLIENT_SERIALIZE_FACTORY = new FastJsonSerializeFactory();
-                break;
-            default:
-                CLIENT_SERIALIZE_FACTORY = new JDKSerializeFactory();
-                break;
-        }
+        // 加载路由策略
+        EXTENSION_LOADER.load(IRouter.class);
+        LinkedHashMap<String, Class<?>> routerLinkedHashMap = ExtensionLoader.CLASS_CACHE.get(IRouter.class.getName());
+        Class<?> aClass = routerLinkedHashMap.get(clientConfig.getRouterStrategy());
+        I_ROUTER = (IRouter) aClass.newInstance();
 
+        // 加载客户端序列化策略
+        EXTENSION_LOADER.load(SerializeFactory.class);
+        LinkedHashMap<String, Class<?>> serializeLinkedHashMap = ExtensionLoader.CLASS_CACHE.get(SerializeFactory.class.getName());
+        Class<?> serializeClass = serializeLinkedHashMap.get(clientConfig.getClientSerialize());
+        CLIENT_SERIALIZE_FACTORY = (SerializeFactory) serializeClass.newInstance();
+
+        // 添加过滤器链
+        EXTENSION_LOADER.load(IClientFilter.class);
+        LinkedHashMap<String, Class<?>> clientFilterLinkedHashMap = ExtensionLoader.CLASS_CACHE.get(IClientFilter.class.getName());
+        Set<String> classNames = clientFilterLinkedHashMap.keySet();
         ClientFilterChain clientFilterChain = new ClientFilterChain();
-        clientFilterChain.addFilter(new ClientGroupFilterImpl());
-        clientFilterChain.addFilter(new ClientLogFilterImpl());
-        clientFilterChain.addFilter(new DirectInvokeFilterImpl());
+        for (String className : classNames) {
+            Class<?> filterClass = clientFilterLinkedHashMap.get(className);
+            clientFilterChain.addFilter((IClientFilter) filterClass.newInstance());
+        }
         CLIENT_FILTER_CHAIN = clientFilterChain;
+
+        CLIENT_CONFIG = clientConfig;
     }
 
     /**
@@ -124,7 +128,16 @@ public class Client {
      */
     private void subscribeService(Class<?> beanServiceClass) {
         if (register == null) {
-            register = new ZookeeperRegister(clientConfig.getAddress());
+
+            // 使用SPI技术优化
+            try {
+                EXTENSION_LOADER.load(RegistryService.class);
+                LinkedHashMap<String, Class<?>> linkedHashMap = ExtensionLoader.CLASS_CACHE.get(RegistryService.class.getName());
+                Class<?> aClass = linkedHashMap.get(clientConfig.getRegisterType());
+                register = (AbstractRegister) aClass.newInstance();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
 
         String serviceName = beanServiceClass.getName();
@@ -201,7 +214,7 @@ public class Client {
 
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
 
         // 创建客户端获取代理工厂
         Client client = new Client();
@@ -225,7 +238,7 @@ public class Client {
         // 开启异步线程，获取SEND_QUEUE中的信息
         client.startClientApplication();
 
-        for (int i = 0; i < 22; i++){
+        for (int i = 0; i < 22; i++) {
             Thread.sleep(500);
             // 发送请求消息
             System.out.println(userService.getUserInfo("lwj", i));

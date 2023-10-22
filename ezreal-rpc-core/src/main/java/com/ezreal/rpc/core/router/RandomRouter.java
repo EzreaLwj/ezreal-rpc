@@ -18,6 +18,9 @@ import static com.ezreal.rpc.core.common.cache.ClientServiceCache.*;
  */
 public class RandomRouter implements IRouter {
 
+    public RandomRouter() {
+    }
+
     @Override
     public void refreshRouteArr(Selector selector) {
         String serviceName = selector.getServiceName();

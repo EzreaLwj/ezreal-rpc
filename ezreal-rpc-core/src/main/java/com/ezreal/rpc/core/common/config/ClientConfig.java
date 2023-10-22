@@ -14,6 +14,11 @@ public class ClientConfig {
 
     private String clientSerialize;
 
+    /**
+     * 注册中心类型
+     */
+    private String registerType;
+
     public ClientConfig() {
     }
 
@@ -52,5 +57,13 @@ public class ClientConfig {
 
     public void setClientSerialize(String clientSerialize) {
         this.clientSerialize = clientSerialize;
+    }
+
+    public String getRegisterType() {
+        return registerType;
+    }
+
+    public void setRegisterType(String registerType) {
+        this.registerType = registerType;
     }
 }

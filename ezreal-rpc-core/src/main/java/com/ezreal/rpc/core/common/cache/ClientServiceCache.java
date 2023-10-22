@@ -8,6 +8,7 @@ import com.ezreal.rpc.core.common.config.ClientConfig;
 import com.ezreal.rpc.core.filter.client.ClientFilterChain;
 import com.ezreal.rpc.core.router.IRouter;
 import com.ezreal.rpc.core.serialize.SerializeFactory;
+import com.ezreal.rpc.core.spi.ExtensionLoader;
 
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -64,5 +65,7 @@ public class ClientServiceCache {
      * 客户端执行器链
      */
     public static ClientFilterChain CLIENT_FILTER_CHAIN ;
+
+    public static ExtensionLoader EXTENSION_LOADER = new ExtensionLoader();
 
 }

@@ -1,0 +1,2 @@
+serverLogFilterImpl=com.ezreal.rpc.core.filter.server.ServerLogFilterImpl
+serverTokenFilterImpl=com.ezreal.rpc.core.filter.server.ServerTokenFilterImpl

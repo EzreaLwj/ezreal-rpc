@@ -1,0 +1,2 @@
+random=com.ezreal.rpc.core.router.RandomRouter
+rotate=com.ezreal.rpc.core.router.RotateRouter

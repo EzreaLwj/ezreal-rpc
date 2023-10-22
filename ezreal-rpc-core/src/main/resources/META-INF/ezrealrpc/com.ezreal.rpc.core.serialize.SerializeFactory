@@ -1,0 +1,2 @@
+fastjson=com.ezreal.rpc.core.serialize.fastjson.FastJsonSerializeFactory
+jdk=com.ezreal.rpc.core.serialize.jdk.JDKSerializeFactory

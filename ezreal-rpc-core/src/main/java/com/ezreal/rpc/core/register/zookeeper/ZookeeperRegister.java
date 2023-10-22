@@ -1,6 +1,7 @@
 package com.ezreal.rpc.core.register.zookeeper;
 
 import com.alibaba.fastjson.JSON;
+import com.ezreal.rpc.core.common.config.ServerConfig;
 import com.ezreal.rpc.core.common.event.ListenerLoader;
 import com.ezreal.rpc.core.common.event.UpdateServiceEvent;
 import com.ezreal.rpc.core.common.event.WeightDataChangeEvent;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 
+import static com.ezreal.rpc.core.common.cache.ClientServiceCache.CLIENT_CONFIG;
 import static com.ezreal.rpc.core.common.cache.ClientServiceCache.I_ROUTER;
 
 /**
@@ -30,6 +32,11 @@ public class ZookeeperRegister extends AbstractRegister implements RegistryServi
     private AbstractZookeeperClient zookeeperClient;
 
     private final String ROOT = "/ezrealrpc";
+
+    public ZookeeperRegister() {
+        String registryAddr = CLIENT_CONFIG.getAddress();
+        this.zookeeperClient = new CuratorZookeeperClient(registryAddr);
+    }
 
     public ZookeeperRegister(String address) {
         this.zookeeperClient = new CuratorZookeeperClient(address);

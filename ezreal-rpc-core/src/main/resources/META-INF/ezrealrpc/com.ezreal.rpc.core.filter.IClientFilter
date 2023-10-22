@@ -1,0 +1,3 @@
+clientGroupFilterImpl=com.ezreal.rpc.core.filter.client.ClientGroupFilterImpl
+clientLogFilterImpl=com.ezreal.rpc.core.filter.client.ClientLogFilterImpl
+directInvokeFilterImpl=com.ezreal.rpc.core.filter.client.DirectInvokeFilterImpl

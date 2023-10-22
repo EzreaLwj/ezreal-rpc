@@ -15,6 +15,8 @@ public class PropertiesBootStrap {
 
     private final static String CLIENT_SERIALIZE = "ezrealRpc.clientSerialize";
 
+    public static final String REGISTER_TYPE = "ezrealRpc.registerType";
+
     public static ClientConfig loadClientConfig() {
         PropertiesLoader.loadConfiguration();
 
@@ -23,6 +25,7 @@ public class PropertiesBootStrap {
         config.setApplicationName(PropertiesLoader.getPropertiesStr(APPLICATION_NAME));
         config.setRouterStrategy(PropertiesLoader.getPropertiesStr(ROUTER_STRATEGY));
         config.setClientSerialize(PropertiesLoader.getPropertiesStr(CLIENT_SERIALIZE));
+        config.setRegisterType(PropertiesLoader.getPropertiesStr(REGISTER_TYPE));
 
         return config;
     }

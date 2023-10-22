@@ -1,0 +1,1 @@
+zookeeper=com.ezreal.rpc.core.register.zookeeper.ZookeeperRegister

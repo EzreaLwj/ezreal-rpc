@@ -15,6 +15,9 @@ import static com.ezreal.rpc.core.common.cache.ClientServiceCache.*;
  */
 public class RotateRouter implements IRouter{
 
+    public RotateRouter() {
+    }
+
     @Override
     public void refreshRouteArr(Selector selector) {
         String serviceName = selector.getServiceName();
