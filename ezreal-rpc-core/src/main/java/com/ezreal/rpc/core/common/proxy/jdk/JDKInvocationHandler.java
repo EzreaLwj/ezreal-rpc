@@ -37,6 +37,11 @@ public class JDKInvocationHandler implements InvocationHandler {
 
         // 放入请求体
         REQUEST_QUEUE.put(rpcInvocation);
+
+        // 既然是一步请求，就没有必要再在RESP_MAP中判断是否有响应结果了
+        if (rpcReferenceWrapper.isAsync()) {
+            return null;
+        }
         RESP_MESSAGE.put(rpcInvocation.getUuid(), object);
 
         // 接收返回信息
