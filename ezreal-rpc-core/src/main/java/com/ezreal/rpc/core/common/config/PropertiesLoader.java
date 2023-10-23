@@ -3,6 +3,8 @@ package com.ezreal.rpc.core.common.config;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
 
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -17,18 +19,21 @@ public class PropertiesLoader {
 
     private static HashMap<String, String> propertiesMap = new HashMap<>();
 
-    private static final String FILE_PATH = "D:\\IDEA_PROJECT3\\ezreal-rpc\\ezreal-rpc-core\\src\\main\\resources\\ezreal-rpc.properties";
+    private static final String FILE_PATH = "ezreal-rpc.properties";
 
     public static void loadConfiguration() {
         if (properties != null) {
             return;
         }
-        try(FileInputStream fileInputStream = new FileInputStream(FILE_PATH)) {
+
+        try {
             properties = new Properties();
-            properties.load(fileInputStream);
-        } catch (Exception e) {
-            e.printStackTrace();
+            InputStream inputStream = PropertiesLoader.class.getClassLoader().getResourceAsStream(FILE_PATH);
+            properties.load(inputStream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+
     }
 
 

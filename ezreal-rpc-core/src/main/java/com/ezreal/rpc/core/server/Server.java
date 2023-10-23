@@ -6,6 +6,7 @@ import com.ezreal.rpc.core.common.config.PropertiesBootStrap;
 import com.ezreal.rpc.core.common.config.ServerConfig;
 import com.ezreal.rpc.core.common.event.ListenerLoader;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
+import com.ezreal.rpc.core.dispatcher.ServerChannelDispatcher;
 import com.ezreal.rpc.core.filter.IServerFilter;
 import com.ezreal.rpc.core.filter.server.ServerFilterChain;
 import com.ezreal.rpc.core.filter.server.ServerLogFilterImpl;
@@ -77,6 +78,8 @@ public class Server {
         }
 
         SERVER_FILTER_CHAIN = serverFilterChain;
+
+        SERVER_CHANNEL_DISPATCHER.init(serverConfig.getPort(), serverConfig.getPort());
     }
 
     public void setOnApplication() throws InterruptedException {
@@ -102,6 +105,7 @@ public class Server {
 
         logger.info("服务端启动,监听端口{}", serverConfig.getPort());
         this.batchExport();
+        SERVER_CHANNEL_DISPATCHER.startServerJobCoreHandler();
         ChannelFuture channelFuture = serverBootstrap.bind(serverConfig.getPort()).sync();
         channelFuture.channel().closeFuture().sync();
     }

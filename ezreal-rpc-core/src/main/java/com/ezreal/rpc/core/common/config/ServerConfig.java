@@ -14,6 +14,16 @@ public class ServerConfig {
 
     private String serverSerialize;
 
+    /**
+     * 服务端业务线程数目
+     */
+    private Integer serverBizThreadNums;
+
+    /**
+     * 服务端接收队列的大小
+     */
+    private Integer serverQueueSize;
+
     public ServerConfig() {
     }
 
@@ -47,5 +57,21 @@ public class ServerConfig {
 
     public void setServerSerialize(String serverSerialize) {
         this.serverSerialize = serverSerialize;
+    }
+
+    public Integer getServerBizThreadNums() {
+        return serverBizThreadNums;
+    }
+
+    public void setServerBizThreadNums(Integer serverBizThreadNums) {
+        this.serverBizThreadNums = serverBizThreadNums;
+    }
+
+    public Integer getServerQueueSize() {
+        return serverQueueSize;
+    }
+
+    public void setServerQueueSize(Integer serverQueueSize) {
+        this.serverQueueSize = serverQueueSize;
     }
 }

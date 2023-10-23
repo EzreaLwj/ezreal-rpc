@@ -17,6 +17,10 @@ public class PropertiesBootStrap {
 
     public static final String REGISTER_TYPE = "ezrealRpc.registerType";
 
+    public static final String SERVER_BIZ_THREAD_NUMS = "ezrealRpc.server.biz.thread.nums";
+
+    public static final String SERVER_QUEUE_SIZE = "ezrealRpc.server.queue.size";
+
     public static ClientConfig loadClientConfig() {
         PropertiesLoader.loadConfiguration();
 
@@ -38,6 +42,8 @@ public class PropertiesBootStrap {
         serverConfig.setAddress(PropertiesLoader.getPropertiesStr(ADDRESS));
         serverConfig.setApplicationName(PropertiesLoader.getPropertiesStr(APPLICATION_NAME));
         serverConfig.setServerSerialize(PropertiesLoader.getPropertiesStr(SERVER_SERIALIZE));
+        serverConfig.setServerBizThreadNums(PropertiesLoader.getPropertiesInteger(SERVER_BIZ_THREAD_NUMS));
+        serverConfig.setServerQueueSize(PropertiesLoader.getPropertiesInteger(SERVER_QUEUE_SIZE));
         return serverConfig;
     }
 }

@@ -1,5 +1,6 @@
 package com.ezreal.rpc.core.common.cache;
 
+import com.ezreal.rpc.core.dispatcher.ServerChannelDispatcher;
 import com.ezreal.rpc.core.filter.server.ServerFilterChain;
 import com.ezreal.rpc.core.register.RegistryService;
 import com.ezreal.rpc.core.register.URL;
@@ -41,5 +42,7 @@ public class ServerServiceCache {
      * 服务端执行链
      */
     public static ServerFilterChain SERVER_FILTER_CHAIN;
+
+    public static ServerChannelDispatcher SERVER_CHANNEL_DISPATCHER = new ServerChannelDispatcher();
 
 }
