@@ -37,6 +37,8 @@ public class RpcInvocation implements Serializable {
      */
     private Object response;
 
+    private Throwable e;
+
     private Map<String, Object> attachments = new ConcurrentHashMap<>();
 
     public String getServiceName() {
@@ -85,5 +87,13 @@ public class RpcInvocation implements Serializable {
 
     public void setAttachments(Map<String, Object> attachments) {
         this.attachments = attachments;
+    }
+
+    public Throwable getE() {
+        return e;
+    }
+
+    public void setE(Throwable e) {
+        this.e = e;
     }
 }

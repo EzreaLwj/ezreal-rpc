@@ -1,5 +1,6 @@
 package com.ezreal.rpc.core.common;
 
+import com.ezreal.rpc.core.common.constants.RpcConstants;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -16,6 +17,7 @@ public class RpcEncoder extends MessageToByteEncoder<RpcProtocol> {
         byteBuf.writeShort(rpcProtocol.getMagicNumber());
         byteBuf.writeInt(rpcProtocol.getContentLength());
         byteBuf.writeBytes(rpcProtocol.getContent());
+        byteBuf.writeBytes(RpcConstants.DEFAULT_DECODE_CHAR.getBytes());
     }
 
 }

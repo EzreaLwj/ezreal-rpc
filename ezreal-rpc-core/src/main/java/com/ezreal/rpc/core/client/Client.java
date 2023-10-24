@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.ezreal.rpc.core.common.*;
 import com.ezreal.rpc.core.common.config.ClientConfig;
 import com.ezreal.rpc.core.common.config.PropertiesBootStrap;
+import com.ezreal.rpc.core.common.constants.RpcConstants;
 import com.ezreal.rpc.core.common.event.ListenerLoader;
 import com.ezreal.rpc.core.common.proxy.jdk.JDKProxyFactory;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
@@ -25,12 +26,15 @@ import com.ezreal.rpc.core.serialize.jdk.JDKSerializeFactory;
 import com.ezreal.rpc.core.spi.ExtensionLoader;
 import com.ezreal.rpc.test.UserService;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +79,8 @@ public class Client {
                     @Override
                     protected void initChannel(SocketChannel channel) throws Exception {
                         ChannelPipeline pipeline = channel.pipeline();
+                        ByteBuf delimiter = Unpooled.copiedBuffer(RpcConstants.DEFAULT_DECODE_CHAR.getBytes());
+                        channel.pipeline().addLast(new DelimiterBasedFrameDecoder(clientConfig.getMaxServerRespDataSize(), delimiter));
                         pipeline.addLast(new RpcDecoder());
                         pipeline.addLast(new RpcEncoder());
                         pipeline.addLast(new ClientHandler());

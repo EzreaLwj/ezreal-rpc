@@ -21,6 +21,12 @@ public class PropertiesBootStrap {
 
     public static final String SERVER_QUEUE_SIZE = "ezrealRpc.server.queue.size";
 
+    public static final String SERVER_MAX_CONNECTION = "ezrealRpc.server.max.connection";
+
+    public static final String SERVER_MAX_DATA_SIZE = "ezrealRpc.server.max.data.size";
+
+    public static final String CLIENT_MAX_DATA_SIZE = "ezrealRpc.client.max.data.size";
+
     public static ClientConfig loadClientConfig() {
         PropertiesLoader.loadConfiguration();
 
@@ -30,6 +36,7 @@ public class PropertiesBootStrap {
         config.setRouterStrategy(PropertiesLoader.getPropertiesStr(ROUTER_STRATEGY));
         config.setClientSerialize(PropertiesLoader.getPropertiesStr(CLIENT_SERIALIZE));
         config.setRegisterType(PropertiesLoader.getPropertiesStr(REGISTER_TYPE));
+        config.setMaxServerRespDataSize(PropertiesLoader.getPropertiesInteger(CLIENT_MAX_DATA_SIZE));
 
         return config;
     }
@@ -44,6 +51,9 @@ public class PropertiesBootStrap {
         serverConfig.setServerSerialize(PropertiesLoader.getPropertiesStr(SERVER_SERIALIZE));
         serverConfig.setServerBizThreadNums(PropertiesLoader.getPropertiesInteger(SERVER_BIZ_THREAD_NUMS));
         serverConfig.setServerQueueSize(PropertiesLoader.getPropertiesInteger(SERVER_QUEUE_SIZE));
+        serverConfig.setMaxConnections(PropertiesLoader.getPropertiesInteger(SERVER_MAX_CONNECTION));
+        serverConfig.setMaxServerRequestData(PropertiesLoader.getPropertiesInteger(SERVER_MAX_DATA_SIZE));
+
         return serverConfig;
     }
 }

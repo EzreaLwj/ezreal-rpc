@@ -21,7 +21,9 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
 
         byte[] content = rpcProtocol.getContent();
         RpcInvocation rpcInvocation = CLIENT_SERIALIZE_FACTORY.deserialize(content,RpcInvocation.class);
-
+        if (rpcInvocation.getE() != null) {
+            rpcInvocation.getE().printStackTrace();
+        }
         if (!RESP_MESSAGE.containsKey(rpcInvocation.getUuid())) {
             throw new RuntimeException("the request is not exist");
         }

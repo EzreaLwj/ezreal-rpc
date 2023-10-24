@@ -5,6 +5,7 @@ import com.ezreal.rpc.core.common.RpcProtocol;
 import com.ezreal.rpc.core.server.ServerChannelReadData;
 import io.netty.channel.ChannelHandlerContext;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.*;
 
@@ -65,9 +66,17 @@ public class ServerChannelDispatcher {
                                for (Method method : methods) {
                                    if (method.getName().equals(rpcInvocation.getMethodName())) {
                                        if (method.getReturnType().equals(Void.class)) {
-                                           method.invoke(beanService, rpcInvocation.getArgs());
+                                           try {
+                                               method.invoke(beanService, rpcInvocation.getArgs());
+                                           } catch (Exception e) {
+                                               rpcInvocation.setE(e);
+                                           }
                                        } else {
-                                           result = method.invoke(beanService, rpcInvocation.getArgs());
+                                           try {
+                                               result = method.invoke(beanService, rpcInvocation.getArgs());
+                                           } catch (Exception e) {
+                                               rpcInvocation.setE(e);
+                                           }
                                        }
                                    }
                                }

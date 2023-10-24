@@ -20,39 +20,22 @@ public class RpcDecoder extends ByteToMessageDecoder {
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
 
         if (byteBuf.readableBytes() >= BASE_LENGTH) {
-            // 防止收到一些体积过大的数据包
-            if (byteBuf.readableBytes() > 1000) {
-                byteBuf.skipBytes(byteBuf.readableBytes());
-            }
-
-            int readIndex;
-            while (true) {
-                // 标志当前读索引，便于之后回溯
-                readIndex = byteBuf.readerIndex();
-                byteBuf.markReaderIndex();
-
-                short magicNumber = byteBuf.readShort();
-                if (magicNumber == MAGIC_NUMBER) {
-                    break;
-                } else {
-                    // 如果不是魔数，就结束该通道
-                    channelHandlerContext.close();
-                    return;
-                }
-            }
-
-            int contentLength = byteBuf.readInt();
-            // 如果剩下的数据不够, 要重置索引
-            if (byteBuf.readableBytes() < contentLength) {
-                byteBuf.readerIndex(readIndex);
+            if (byteBuf.readShort() != MAGIC_NUMBER) {
+                channelHandlerContext.close();
                 return;
             }
 
-            byte[] bytes = new byte[contentLength];
-            byteBuf.readBytes(bytes);
-            RpcProtocol rpcProtocol = new RpcProtocol();
-            rpcProtocol.setContent(bytes);
-            rpcProtocol.setContentLength(contentLength);
+            int length = byteBuf.readInt();
+            if (byteBuf.readableBytes() < length) {
+
+                // 数据包有异常
+                channelHandlerContext.close();
+                return;
+            }
+
+            byte[] body = new byte[length];
+            byteBuf.readBytes(body);
+            RpcProtocol rpcProtocol = new RpcProtocol(body);
             list.add(rpcProtocol);
         }
     }

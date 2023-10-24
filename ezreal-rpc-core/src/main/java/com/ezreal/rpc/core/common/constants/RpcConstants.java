@@ -20,4 +20,6 @@ public class RpcConstants {
 
     public static final String KRYO_SERIALIZE_TYPE = "kryo";
 
+    public static final String DEFAULT_DECODE_CHAR = "$_i0#Xsop1_$";
+
 }

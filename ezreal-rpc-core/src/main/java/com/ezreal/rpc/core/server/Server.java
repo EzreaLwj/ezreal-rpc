@@ -4,6 +4,7 @@ import com.ezreal.rpc.core.common.RpcDecoder;
 import com.ezreal.rpc.core.common.RpcEncoder;
 import com.ezreal.rpc.core.common.config.PropertiesBootStrap;
 import com.ezreal.rpc.core.common.config.ServerConfig;
+import com.ezreal.rpc.core.common.constants.RpcConstants;
 import com.ezreal.rpc.core.common.event.ListenerLoader;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
 import com.ezreal.rpc.core.dispatcher.ServerChannelDispatcher;
@@ -20,6 +21,8 @@ import com.ezreal.rpc.core.serialize.jdk.JDKSerializeFactory;
 import com.ezreal.rpc.core.spi.ExtensionLoader;
 import com.ezreal.rpc.test.UserServiceImpl;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -27,6 +30,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,6 +102,8 @@ public class Server {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel channel) throws Exception {
+                        ByteBuf delimiter = Unpooled.copiedBuffer(RpcConstants.DEFAULT_DECODE_CHAR.getBytes());
+                        channel.pipeline().addLast(new DelimiterBasedFrameDecoder(serverConfig.getMaxServerRequestData(), delimiter));
                         channel.pipeline().addLast(new RpcEncoder());
                         channel.pipeline().addLast(new RpcDecoder());
                         channel.pipeline().addLast(new ServerHandler());
