@@ -2,6 +2,7 @@ package com.ezreal.rpc.core.dispatcher;
 
 import com.ezreal.rpc.core.common.RpcInvocation;
 import com.ezreal.rpc.core.common.RpcProtocol;
+import com.ezreal.rpc.core.exception.IRpcException;
 import com.ezreal.rpc.core.server.ServerChannelReadData;
 import io.netty.channel.ChannelHandlerContext;
 
@@ -55,8 +56,20 @@ public class ServerChannelDispatcher {
                                RpcProtocol rpcProtocol = serverChannelReadData.getProtocol();
                                RpcInvocation rpcInvocation = SERVER_SERIALIZE_FACTORY.deserialize(rpcProtocol.getContent(), RpcInvocation.class);
 
-                               // 执行过滤器链
-                               SERVER_FILTER_CHAIN.doFilter(rpcInvocation);
+                               // 执行前过滤器链
+                               try {
+                                   SERVER_BEFORE_FILTER_CHAIN.doFilter(rpcInvocation);
+                               } catch (Exception e) {
+                                   if (e instanceof IRpcException) {
+                                       IRpcException rpcException = (IRpcException) e;
+                                       RpcInvocation reqParam = rpcException.getRpcInvocation();
+                                       rpcInvocation.setE(rpcException);
+                                       byte[] body = SERVER_SERIALIZE_FACTORY.serialize(reqParam);
+                                       RpcProtocol respRpcProtocol = new RpcProtocol(body);
+                                       serverChannelReadData.getChannelHandlerContext().writeAndFlush(respRpcProtocol);
+                                       return;
+                                   }
+                               }
 
                                String serviceName = rpcInvocation.getServiceName();
                                Object beanService = PROVIDER_CLASS_MAP.get(serviceName);
@@ -81,6 +94,8 @@ public class ServerChannelDispatcher {
                                    }
                                }
 
+                               // 执行后过滤器
+                               SERVER_AFTER_FILTER_CHAIN.doFilter(rpcInvocation);
                                rpcInvocation.setResponse(result);
                                RpcProtocol responseRpcProtocol = new RpcProtocol(SERVER_SERIALIZE_FACTORY.serialize(rpcInvocation));
                                ctx.writeAndFlush(responseRpcProtocol);

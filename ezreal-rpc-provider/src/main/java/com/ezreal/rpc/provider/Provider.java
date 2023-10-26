@@ -24,7 +24,7 @@ public class Provider {
 
         ServiceWrapper serviceWrapper = new ServiceWrapper(new UserServiceImpl(), "dev");
         serviceWrapper.setServiceToken("token-a");
-        serviceWrapper.setLimit(2);
+        serviceWrapper.setLimit(100);
         // 暴露服务
         server.exportService(serviceWrapper);
         // 注册钩子

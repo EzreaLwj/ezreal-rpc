@@ -2,6 +2,7 @@ package com.ezreal.rpc.core.filter.server;
 
 import com.ezreal.rpc.core.common.ChannelFutureWrapper;
 import com.ezreal.rpc.core.common.RpcInvocation;
+import com.ezreal.rpc.core.common.annotation.SPI;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
 import com.ezreal.rpc.core.filter.IServerFilter;
 import com.ezreal.rpc.core.server.ServiceWrapper;
@@ -14,6 +15,7 @@ import static com.ezreal.rpc.core.common.cache.ServerServiceCache.PROVIDER_SERVI
  * @author Ezreal
  * @Date 2023/10/21
  */
+@SPI("before")
 public class ServerTokenFilterImpl implements IServerFilter {
 
     @Override

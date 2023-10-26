@@ -2,22 +2,20 @@ package com.ezreal.rpc.core.server;
 
 import com.ezreal.rpc.core.common.RpcDecoder;
 import com.ezreal.rpc.core.common.RpcEncoder;
+import com.ezreal.rpc.core.common.ServerServiceSemaphoreWrapper;
+import com.ezreal.rpc.core.common.annotation.SPI;
 import com.ezreal.rpc.core.common.config.PropertiesBootStrap;
 import com.ezreal.rpc.core.common.config.ServerConfig;
 import com.ezreal.rpc.core.common.constants.RpcConstants;
 import com.ezreal.rpc.core.common.event.ListenerLoader;
 import com.ezreal.rpc.core.common.utils.CommonUtil;
-import com.ezreal.rpc.core.dispatcher.ServerChannelDispatcher;
 import com.ezreal.rpc.core.filter.IServerFilter;
+import com.ezreal.rpc.core.filter.server.ServerAfterFilterChain;
+import com.ezreal.rpc.core.filter.server.ServerBeforeFilterChain;
 import com.ezreal.rpc.core.filter.server.ServerFilterChain;
-import com.ezreal.rpc.core.filter.server.ServerLogFilterImpl;
-import com.ezreal.rpc.core.filter.server.ServerTokenFilterImpl;
 import com.ezreal.rpc.core.register.URL;
-import com.ezreal.rpc.core.register.zookeeper.AbstractRegister;
 import com.ezreal.rpc.core.register.zookeeper.ZookeeperRegister;
 import com.ezreal.rpc.core.serialize.SerializeFactory;
-import com.ezreal.rpc.core.serialize.fastjson.FastJsonSerializeFactory;
-import com.ezreal.rpc.core.serialize.jdk.JDKSerializeFactory;
 import com.ezreal.rpc.core.spi.ExtensionLoader;
 import com.ezreal.rpc.test.UserServiceImpl;
 import io.netty.bootstrap.ServerBootstrap;
@@ -31,20 +29,15 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
-import io.netty.handler.codec.LineBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
-import static com.ezreal.rpc.core.common.cache.ClientServiceCache.CLIENT_SERIALIZE_FACTORY;
 import static com.ezreal.rpc.core.common.cache.ClientServiceCache.EXTENSION_LOADER;
 import static com.ezreal.rpc.core.common.cache.ServerServiceCache.*;
-import static com.ezreal.rpc.core.common.constants.RpcConstants.FAST_JSON_SERIALIZE_TYPE;
-import static com.ezreal.rpc.core.common.constants.RpcConstants.JDK_SERIALIZE_TYPE;
 
 /**
  * @author Ezreal
@@ -73,16 +66,32 @@ public class Server {
         Class<?> serializeFactoryClass = serializeFactoryLinkedHashMap.get(serverSerialize);
         SERVER_SERIALIZE_FACTORY = (SerializeFactory) serializeFactoryClass.newInstance();
 
+        ServerAfterFilterChain serverAfterFilterChain = new ServerAfterFilterChain();
+        ServerBeforeFilterChain serverBeforeFilterChain = new ServerBeforeFilterChain();
+
         EXTENSION_LOADER.load(IServerFilter.class);
         LinkedHashMap<String, Class<?>> serverFilterLinkedHashMap = ExtensionLoader.CLASS_CACHE.get(IServerFilter.class.getName());
         Set<String> filterName = serverFilterLinkedHashMap.keySet();
-        ServerFilterChain serverFilterChain = new ServerFilterChain();
+
         for (String name : filterName) {
             Class<?> aClass = serverFilterLinkedHashMap.get(name);
-            serverFilterChain.addServerFilter((IServerFilter) aClass.newInstance());
+            SPI spi = aClass.getAnnotation(SPI.class);
+            if (spi == null) {
+                throw new RuntimeException("没有含有 SPI 注解");
+            }
+            String value = spi.value();
+            if ("before".equals(value)) {
+                serverBeforeFilterChain.addServerFilter((IServerFilter) aClass.newInstance());
+            } else if ("after".equals(value)) {
+                serverAfterFilterChain.addServerFilter((IServerFilter) aClass.newInstance());
+            } else {
+                throw new RuntimeException("过滤器不匹配");
+            }
+
         }
 
-        SERVER_FILTER_CHAIN = serverFilterChain;
+        SERVER_BEFORE_FILTER_CHAIN = serverBeforeFilterChain;
+        SERVER_AFTER_FILTER_CHAIN = serverAfterFilterChain;
 
         SERVER_CHANNEL_DISPATCHER.init(serverConfig.getPort(), serverConfig.getPort());
     }
@@ -99,6 +108,7 @@ public class Server {
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.SO_SNDBUF, 1024 * 16)
                 .option(ChannelOption.SO_RCVBUF, 1024 * 16)
+                .handler(new MaxConnectionLimitHandler(serverConfig.getMaxConnections()))
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel channel) throws Exception {
@@ -151,6 +161,8 @@ public class Server {
         if (!CommonUtil.isEmpty(serviceWrapper.getServiceToken())) {
             PROVIDER_SERVICE_WRAPPER_MAP.put(serviceName, serviceWrapper);
         }
+
+        SERVER_SERVICE_SEMAPHORE_MAP.put(anInterface.getName(),new ServerServiceSemaphoreWrapper(serviceWrapper.getLimit()));
     }
 
     public void batchExport() {

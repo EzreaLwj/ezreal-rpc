@@ -39,6 +39,8 @@ public class RpcInvocation implements Serializable {
 
     private Throwable e;
 
+    private int retry;
+
     private Map<String, Object> attachments = new ConcurrentHashMap<>();
 
     public String getServiceName() {
@@ -95,5 +97,13 @@ public class RpcInvocation implements Serializable {
 
     public void setE(Throwable e) {
         this.e = e;
+    }
+
+    public int getRetry() {
+        return retry;
+    }
+
+    public void setRetry(int retry) {
+        this.retry = retry;
     }
 }

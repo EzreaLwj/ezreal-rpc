@@ -11,7 +11,7 @@ public class RpcReferenceWrapper<T> {
 
     private Class<T> aimClass;
 
-    private Map<String,Object> attachments = new ConcurrentHashMap<>();
+    private Map<String, Object> attachments = new ConcurrentHashMap<>();
 
     public boolean isAsync() {
         Object r = attachments.get("async");
@@ -19,6 +19,21 @@ public class RpcReferenceWrapper<T> {
             return false;
         }
         return Boolean.valueOf(true);
+    }
+
+    /**
+     * 失败重试次数
+     */
+    public int getRetry() {
+        if (attachments.get("retry") == null) {
+            return 0;
+        } else {
+            return (int) attachments.get("retry");
+        }
+    }
+
+    public void setRetry(int retry) {
+        this.attachments.put("retry", retry);
     }
 
     public void setAsync(boolean async) {
@@ -33,12 +48,12 @@ public class RpcReferenceWrapper<T> {
         this.attachments.put("url", url);
     }
 
-    public String getServiceToken(){
+    public String getServiceToken() {
         return String.valueOf(attachments.get("serviceToken"));
     }
 
-    public void setServiceToken(String serviceToken){
-        attachments.put("serviceToken",serviceToken);
+    public void setServiceToken(String serviceToken) {
+        attachments.put("serviceToken", serviceToken);
     }
 
     public Class<T> getAimClass() {
@@ -49,12 +64,12 @@ public class RpcReferenceWrapper<T> {
         this.aimClass = aimClass;
     }
 
-    public String getGroup(){
+    public String getGroup() {
         return String.valueOf(attachments.get("group"));
     }
 
-    public void setGroup(String group){
-        attachments.put("group",group);
+    public void setGroup(String group) {
+        attachments.put("group", group);
     }
 
     public Map<String, Object> getAttachments() {

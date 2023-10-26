@@ -6,6 +6,7 @@ import com.ezreal.rpc.core.common.RpcInvocation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 import static com.ezreal.rpc.core.common.cache.ClientServiceCache.REQUEST_QUEUE;
 import static com.ezreal.rpc.core.common.cache.ClientServiceCache.RESP_MESSAGE;
@@ -19,6 +20,8 @@ public class JDKInvocationHandler implements InvocationHandler {
     private final Object object = new Object();
 
     private RpcReferenceWrapper rpcReferenceWrapper;
+
+    private int timeout = 3 * 1000;
 
     public JDKInvocationHandler(RpcReferenceWrapper rpcReferenceWrapper) {
         this.rpcReferenceWrapper = rpcReferenceWrapper;
@@ -34,6 +37,7 @@ public class JDKInvocationHandler implements InvocationHandler {
         rpcInvocation.setArgs(args);
         rpcInvocation.setUuid(UUID.randomUUID().toString());
         rpcInvocation.setAttachments(rpcReferenceWrapper.getAttachments());
+        rpcInvocation.setRetry(rpcReferenceWrapper.getRetry());
 
         // 放入请求体
         REQUEST_QUEUE.put(rpcInvocation);
@@ -46,15 +50,35 @@ public class JDKInvocationHandler implements InvocationHandler {
 
         // 接收返回信息
         long currentTimeMillis = System.currentTimeMillis();
+        int retryTimes = 0;
 
-        while (System.currentTimeMillis() - currentTimeMillis < 3 * 1000) {
+        while (System.currentTimeMillis() - currentTimeMillis < timeout || rpcInvocation.getRetry() > 0) {
             Object returnMsg = RESP_MESSAGE.get(rpcInvocation.getUuid());
             if (returnMsg instanceof RpcInvocation) {
-                return ((RpcInvocation) returnMsg).getResponse();
+                RpcInvocation returnRpcInvocation = (RpcInvocation) returnMsg;
+                if (returnRpcInvocation.getRetry() == 0 && returnRpcInvocation.getE() == null) {
+                    return ((RpcInvocation) returnMsg).getResponse();
+                } else if (returnRpcInvocation.getE() != null){
+
+                    if (returnRpcInvocation.getRetry() == 0) {
+                        return returnRpcInvocation.getResponse();
+                    }
+
+                    // 大于等待时间才进行重试
+                    if (System.currentTimeMillis() - currentTimeMillis > timeout) {
+                        retryTimes++;
+
+                        // 重新请求
+                        rpcInvocation.setRetry(returnRpcInvocation.getRetry() - 1);
+                        rpcInvocation.setResponse(null);
+                        REQUEST_QUEUE.put(rpcInvocation);
+                        RESP_MESSAGE.put(rpcInvocation.getUuid(), object);
+                    }
+                }
             }
         }
 
-        throw new RuntimeException("response timeout");
+        throw new TimeoutException("Wait for response from server on client " + timeout + "ms,retry times is " + retryTimes + ",service's name is " + rpcInvocation.getServiceName() + "#" + rpcInvocation.getMethodName());
     }
 
 }

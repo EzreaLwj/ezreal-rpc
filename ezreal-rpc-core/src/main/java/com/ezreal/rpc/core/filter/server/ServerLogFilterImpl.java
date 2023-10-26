@@ -2,6 +2,7 @@ package com.ezreal.rpc.core.filter.server;
 
 import com.ezreal.rpc.core.common.ChannelFutureWrapper;
 import com.ezreal.rpc.core.common.RpcInvocation;
+import com.ezreal.rpc.core.common.annotation.SPI;
 import com.ezreal.rpc.core.filter.IServerFilter;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.List;
  * @author Ezreal
  * @Date 2023/10/21
  */
+@SPI("before")
 public class ServerLogFilterImpl implements IServerFilter {
 
     @Override

@@ -1,7 +1,9 @@
 package com.ezreal.rpc.core.common.cache;
 
+import com.ezreal.rpc.core.common.ServerServiceSemaphoreWrapper;
 import com.ezreal.rpc.core.dispatcher.ServerChannelDispatcher;
-import com.ezreal.rpc.core.filter.server.ServerFilterChain;
+import com.ezreal.rpc.core.filter.server.ServerAfterFilterChain;
+import com.ezreal.rpc.core.filter.server.ServerBeforeFilterChain;
 import com.ezreal.rpc.core.register.RegistryService;
 import com.ezreal.rpc.core.register.URL;
 import com.ezreal.rpc.core.serialize.SerializeFactory;
@@ -39,10 +41,17 @@ public class ServerServiceCache {
     public static final Map<String, ServiceWrapper> PROVIDER_SERVICE_WRAPPER_MAP = new ConcurrentHashMap<>();
 
     /**
-     * 服务端执行链
+     * 服务端前执行链
      */
-    public static ServerFilterChain SERVER_FILTER_CHAIN;
+    public static ServerAfterFilterChain SERVER_AFTER_FILTER_CHAIN;
+
+    /**
+     * 服务端后执行链
+     */
+    public static ServerBeforeFilterChain SERVER_BEFORE_FILTER_CHAIN;
 
     public static ServerChannelDispatcher SERVER_CHANNEL_DISPATCHER = new ServerChannelDispatcher();
+
+    public static final Map<String, ServerServiceSemaphoreWrapper> SERVER_SERVICE_SEMAPHORE_MAP = new ConcurrentHashMap<>(64);
 
 }
