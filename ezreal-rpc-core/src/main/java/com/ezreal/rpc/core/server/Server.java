@@ -124,7 +124,7 @@ public class Server {
         this.batchExport();
         SERVER_CHANNEL_DISPATCHER.startServerJobCoreHandler();
         ChannelFuture channelFuture = serverBootstrap.bind(serverConfig.getPort()).sync();
-        channelFuture.channel().closeFuture().sync();
+//        channelFuture.channel().closeFuture().sync();
     }
 
     public void exportService(ServiceWrapper serviceWrapper) {

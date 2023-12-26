@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.ezreal.rpc.spring.starter.config.EzrealRpcServerAutoConfigure,\
+  com.ezreal.rpc.spring.starter.config.EzrealRpcClientAutoConfigure

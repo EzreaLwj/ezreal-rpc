@@ -231,6 +231,7 @@ public class Client {
         rpcReferenceWrapper.setGroup("dev");
         rpcReferenceWrapper.setServiceToken("token-a");
         rpcReferenceWrapper.setAimClass(UserService.class);
+        rpcReferenceWrapper.setRetry(2);
         // 获取代理对象，代理对象拦截方法，通过SEND_QUEUE通信
         UserService userService = rpcReference.get(rpcReferenceWrapper);
 

@@ -13,6 +13,7 @@
         <module>ezreal-rpc-interface</module>
         <module>ezreal-rpc-consumer</module>
         <module>ezreal-rpc-provider</module>
+        <module>ezreal-rpc-springboot-starter</module>
     </modules>
 
     <properties>
